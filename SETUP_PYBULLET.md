@@ -45,6 +45,23 @@ Download PyBullet pre-built binaries van de officiële website en installeer han
 
 **Let op**: PyBullet vereist mogelijk compilatie tools (C++ compiler, CMake, etc.). Als installatie faalt, gebruik conda of wacht tot pre-built wheels beschikbaar zijn voor jouw platform.
 
+**⚠️ Bekend Probleem**: Op macOS ARM64 (Apple Silicon) met Python 3.11 werkt pip install niet. Gebruik **Conda** (zie hieronder) of wacht op pre-built wheels.
+
+### Conda Installatie (Aanbevolen voor macOS ARM64)
+
+```bash
+# Installeer Miniconda eerst: https://docs.conda.io/en/latest/miniconda.html
+
+# Maak conda environment
+conda create -n pybullet python=3.9
+conda activate pybullet
+
+# Installeer PyBullet via conda-forge
+conda install -c conda-forge pybullet numpy
+```
+
+Dit werkt gegarandeerd op macOS ARM64!
+
 ## Gebruik
 
 ### PyBullet simulatie uitvoeren
