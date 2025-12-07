@@ -193,7 +193,7 @@ def circle_walk_simulation():
             print(f"Loop snelheid: {circle_speed} rad/s\n")
             
             # Simuleer circulaire beweging
-            for step in range(500):  # ~2 seconden bij 240Hz
+            for step in range(1200):  # 5 seconden bij 240Hz
                 t = step * (1.0 / 240.0)  # Tijd in seconden
                 
                 # Bereken positie op cirkel
