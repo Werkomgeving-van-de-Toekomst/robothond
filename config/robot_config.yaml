@@ -1,0 +1,39 @@
+# Unitree Go2 EDU Robot Configuratie
+
+robot:
+  # Standaard IP adres van de Go2 EDU robot
+  ip_address: "192.168.123.161"
+  
+  # Poort voor SDK communicatie
+  sdk_port: 8080
+  
+  # Timeout in seconden
+  timeout: 5.0
+
+# Bewegingsinstellingen
+movement:
+  # Standaard snelheid (0.0 - 1.0)
+  default_speed: 0.5
+  
+  # Standaard draaisnelheid (rad/s)
+  default_angular_velocity: 0.5
+
+# Sensor instellingen
+sensors:
+  # Update frequentie in Hz
+  update_rate: 20
+  
+  # Welke sensoren te lezen
+  enabled:
+    - imu
+    - joint_states
+    - battery
+
+# Veiligheidsinstellingen
+safety:
+  # Maximale snelheid
+  max_speed: 1.0
+  
+  # Emergency stop enabled
+  emergency_stop_enabled: true
+
