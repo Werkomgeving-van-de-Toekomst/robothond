@@ -44,6 +44,9 @@ unitreego2/
 │   ├── urdf/              # URDF/Xacro bestanden
 │   ├── meshes/            # 3D mesh bestanden
 │   └── config/            # ROS configuratie
+├── src/
+│   └── simulation/        # PyBullet simulatie code
+│       └── go2_simulator.py
 ├── docs/                  # Documentatie
 ├── run_tests.py           # Test runner script
 ├── auto_test.py           # Automatisch test script
@@ -106,6 +109,11 @@ python src/examples/read_sensors.py
 
 # Diagnostiek
 python src/examples/diagnostics.py
+
+# PyBullet simulatie
+python src/examples/pybullet_simulation.py basic
+python src/examples/pybullet_simulation.py movement
+python src/examples/pybullet_simulation.py sensor
 ```
 
 ## Documentatie
