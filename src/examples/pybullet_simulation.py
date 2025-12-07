@@ -14,10 +14,14 @@ from pathlib import Path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 try:
-    from src.simulation import Go2Simulator
+    # Probeer eerst geoptimaliseerde versie voor Apple Silicon
+    try:
+        from src.simulation.go2_simulator_optimized import Go2SimulatorOptimized as Go2Simulator
+    except ImportError:
+        from src.simulation import Go2Simulator
 except ImportError as e:
     print(f"ERROR: {e}")
-    print("\nInstalleer PyBullet met: pip install pybullet")
+    print("\nInstalleer PyBullet met: conda install -c conda-forge pybullet")
     sys.exit(1)
 
 
@@ -91,7 +95,8 @@ def movement_simulation():
                 # Stel alle targets tegelijk in (efficiënter)
                 sim.set_joint_targets(targets)
                 sim.step()
-                time.sleep(1.0 / 60.0)  # 60 Hz simulatie (sneller)
+                # Geen sleep nodig - PyBullet regelt timing zelf voor betere performance
+                # time.sleep(1.0 / 60.0)  # 60 Hz simulatie (sneller)
                 
         except KeyboardInterrupt:
             print("\n\n⚠️  Simulatie gestopt door gebruiker")
@@ -132,7 +137,8 @@ def sensor_simulation():
                         print(f"  {name}: pos={pos:.3f}, vel={vel:.3f}")
                 
                 sim.step()
-                time.sleep(1.0 / 60.0)  # 60 Hz simulatie (sneller)
+                # Geen sleep nodig - PyBullet regelt timing zelf voor betere performance
+                # time.sleep(1.0 / 60.0)  # 60 Hz simulatie (sneller)
                 
         except KeyboardInterrupt:
             print("\n\n⚠️  Simulatie gestopt door gebruiker")
