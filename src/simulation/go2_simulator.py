@@ -65,14 +65,45 @@ class Go2Simulator:
         start_orientation = p.getQuaternionFromEuler([0, 0, 0])
         
         # Fix mesh paths in URDF voor PyBullet
-        urdf_path_str = str(self.urdf_path.absolute())
+        urdf_dir = self.urdf_path.parent.parent
         
-        self.robot_id = p.loadURDF(
-            urdf_path_str,
-            start_pos,
-            start_orientation,
-            flags=p.URDF_USE_INERTIA_FROM_FILE
+        # Repareer URDF paths: vervang package://go2_description/ met absolute paths
+        import re
+        urdf_content = self.urdf_path.read_text(encoding='utf-8')
+        
+        # Vervang package://go2_description/dae/ met absolute pad naar dae/
+        urdf_content = re.sub(
+            r'package://go2_description/dae/([^"]+)',
+            lambda m: str((urdf_dir / "dae" / m.group(1)).absolute()),
+            urdf_content
         )
+        
+        # Vervang package://go2_description/meshes/ met absolute pad naar meshes/
+        urdf_content = re.sub(
+            r'package://go2_description/meshes/([^"]+)',
+            lambda m: str((urdf_dir / "meshes" / m.group(1)).absolute()),
+            urdf_content
+        )
+        
+        # Schrijf tijdelijke URDF met gefixte paths
+        import tempfile
+        temp_urdf = tempfile.NamedTemporaryFile(mode='w', suffix='.urdf', delete=False, encoding='utf-8')
+        temp_urdf.write(urdf_content)
+        temp_urdf.close()
+        
+        try:
+            # Laad URDF met gefixte paths
+            self.robot_id = p.loadURDF(
+                temp_urdf.name,
+                start_pos,
+                start_orientation,
+                flags=p.URDF_USE_INERTIA_FROM_FILE | p.URDF_USE_MATERIAL_COLORS_FROM_MTL
+            )
+        finally:
+            # Verwijder tijdelijke URDF
+            import os
+            if os.path.exists(temp_urdf.name):
+                os.unlink(temp_urdf.name)
         
         # Haal joint informatie op
         self.joint_indices = []
