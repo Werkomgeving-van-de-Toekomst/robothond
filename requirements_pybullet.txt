@@ -1,0 +1,6 @@
+# PyBullet Simulation Dependencies
+# Voor gebruik met Python 3.8-3.11
+
+pybullet>=3.2.0
+numpy>=1.21.0
+
