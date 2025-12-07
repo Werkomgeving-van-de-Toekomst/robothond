@@ -44,3 +44,7 @@ config/local_config.yaml
 logs/
 *.log
 
+# URDF directory (behoud bestanden, maar geen git submodule)
+urdf/.git/
+urdf/.github/
+

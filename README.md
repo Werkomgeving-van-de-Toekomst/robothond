@@ -40,8 +40,13 @@ unitreego2/
 │   ├── test_sensors.py       # Sensor tests
 │   ├── test_error_handling.py # Error handling tests
 │   └── test_performance.py   # Performance tests
+├── urdf/                  # URDF robot beschrijving bestanden
+│   ├── urdf/              # URDF/Xacro bestanden
+│   ├── meshes/            # 3D mesh bestanden
+│   └── config/            # ROS configuratie
 ├── docs/                  # Documentatie
 ├── run_tests.py           # Test runner script
+├── auto_test.py           # Automatisch test script
 └── requirements.txt       # Python dependencies
 ```
 
