@@ -29,6 +29,9 @@ ENV/
 *.pyc
 __pycache__/
 
+# Conda
+.conda/
+
 # IDE
 .vscode/
 .idea/

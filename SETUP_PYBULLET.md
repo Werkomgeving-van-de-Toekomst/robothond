@@ -1,74 +1,28 @@
 # PyBullet Setup Instructies
 
-PyBullet vereist Python 3.8-3.11. Dit project heeft een aparte virtual environment voor PyBullet simulatie.
+PyBullet vereist Python 3.8-3.11. Dit project gebruikt Conda voor PyBullet simulatie.
 
 ## Setup PyBullet Environment
 
-### Stap 1: Maak PyBullet virtual environment
+### Stap 1: Activeer conda environment
 
 ```bash
-# Gebruik Python 3.11 (of 3.8-3.11)
-python3.11 -m venv venv_pybullet
-```
-
-### Stap 2: Activeer environment
-
-```bash
-source venv_pybullet/bin/activate
-```
-
-### Stap 3: Installeer dependencies
-
-**Methode 1: Via pip (als pre-built wheels beschikbaar zijn)**
-
-```bash
-# Upgrade pip eerst
-pip install --upgrade pip
-
-# Probeer PyBullet te installeren
-pip install pybullet numpy
-```
-
-**Methode 2: Via conda (aanbevolen als pip faalt)**
-
-```bash
-# Installeer conda als je het nog niet hebt
-# Dan:
-conda create -n pybullet python=3.11
 conda activate pybullet
-conda install -c conda-forge pybullet numpy
 ```
 
-**Methode 3: Pre-built binaries**
-
-Download PyBullet pre-built binaries van de officiële website en installeer handmatig.
-
-**Let op**: PyBullet vereist mogelijk compilatie tools (C++ compiler, CMake, etc.). Als installatie faalt, gebruik conda of wacht tot pre-built wheels beschikbaar zijn voor jouw platform.
-
-**⚠️ Bekend Probleem**: Op macOS ARM64 (Apple Silicon) met Python 3.11 werkt pip install niet. Gebruik **Conda** (zie hieronder) of wacht op pre-built wheels.
-
-### Conda Installatie (Aanbevolen voor macOS ARM64)
+### Stap 2: Verifieer installatie
 
 ```bash
-# Installeer Miniconda eerst: https://docs.conda.io/en/latest/miniconda.html
-
-# Maak conda environment
-conda create -n pybullet python=3.9
-conda activate pybullet
-
-# Installeer PyBullet via conda-forge
-conda install -c conda-forge pybullet numpy
+python -c "import pybullet; print('PyBullet versie:', pybullet.__version__)"
 ```
-
-Dit werkt gegarandeerd op macOS ARM64!
 
 ## Gebruik
 
 ### PyBullet simulatie uitvoeren
 
 ```bash
-# Activeer PyBullet environment
-source venv_pybullet/bin/activate
+# Activeer conda environment
+conda activate pybullet
 
 # Voer simulatie uit
 python src/examples/pybullet_simulation.py basic
@@ -83,7 +37,7 @@ python src/examples/pybullet_simulation.py sensor
 source venv/bin/activate
 
 # Voor PyBullet simulatie
-source venv_pybullet/bin/activate
+conda activate pybullet
 ```
 
 ## Verificatie
@@ -91,24 +45,29 @@ source venv_pybullet/bin/activate
 Test of PyBullet correct is geïnstalleerd:
 
 ```bash
-source venv_pybullet/bin/activate
+conda activate pybullet
 python -c "import pybullet; print('PyBullet versie:', pybullet.__version__)"
 ```
 
 ## Troubleshooting
 
+### Conda niet gevonden
+
+- Zorg dat conda in je PATH staat
+- Voeg toe aan ~/.zshrc: `export PATH="$HOME/miniconda3/bin:$PATH"`
+- Of gebruik: `source ~/miniconda3/etc/profile.d/conda.sh`
+
 ### PyBullet niet gevonden
 
-- Zorg dat je de juiste virtual environment hebt geactiveerd: `source venv_pybullet/bin/activate`
+- Zorg dat je de conda environment hebt geactiveerd: `conda activate pybullet`
 - Controleer Python versie: `python --version` (moet 3.8-3.11 zijn)
-- Herinstalleer: `pip install --upgrade pybullet`
+- Herinstalleer: `conda install -c conda-forge pybullet --force-reinstall`
 
 ### Import errors
 
-- Zorg dat alle dependencies geïnstalleerd zijn: `pip install -r requirements_pybullet.txt`
-- Controleer of je in de juiste directory bent: `cd /Users/marc/Projecten/unitreego2`
+- Zorg dat je in de project directory bent: `cd /Users/marc/Projecten/unitreego2`
+- Controleer of alle bestanden aanwezig zijn
 
-## Waarom aparte environment?
+## Waarom Conda?
 
-PyBullet ondersteunt momenteel Python 3.8-3.11, terwijl het hoofdproject Python 3.14 gebruikt. Door een aparte environment te gebruiken kunnen beide naast elkaar bestaan zonder conflicten.
-
+PyBullet heeft pre-built binaries via conda-forge die werken op macOS ARM64 (Apple Silicon), terwijl pip installatie faalt op dit platform.

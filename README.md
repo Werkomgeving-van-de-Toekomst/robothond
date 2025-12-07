@@ -118,16 +118,16 @@ python src/examples/pybullet_simulation.py sensor
 
 ## PyBullet Simulatie
 
-Voor PyBullet simulatie is een aparte virtual environment nodig (Python 3.8-3.11):
+Voor PyBullet simulatie gebruiken we Conda (werkt op macOS ARM64):
 
 ```bash
-# Maak PyBullet environment
-python3.11 -m venv venv_pybullet
-source venv_pybullet/bin/activate
-pip install pybullet numpy
+# Activeer conda environment
+conda activate pybullet
 
 # Voer simulatie uit
 python src/examples/pybullet_simulation.py basic
+python src/examples/pybullet_simulation.py movement
+python src/examples/pybullet_simulation.py sensor
 ```
 
 Zie `SETUP_PYBULLET.md` voor gedetailleerde instructies.
