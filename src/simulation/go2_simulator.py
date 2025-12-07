@@ -276,8 +276,11 @@ class Go2Simulator:
         timestep = p.getPhysicsEngineParameters()['fixedTimeStep']
         steps = int(duration / timestep)
         
+        # Optimalisatie: batch steps voor betere performance
+        batch_size = max(1, steps // 100)  # Max 100 callback calls
+        
         for step in range(steps):
-            if callback:
+            if callback and step % batch_size == 0:
                 callback(step, self)
             self.step()
     
