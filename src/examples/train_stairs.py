@@ -60,10 +60,10 @@ def train(
     print("=" * 70)
     print(f"\nTrap Configuratie:")
     print(f"  Aantal treden: {num_steps}")
-    print(f"  Trede hoogte: {step_height}m")
-    print(f"  Trede diepte: {step_depth}m")
-    print(f"  Trap breedte: {step_width}m")
-    print(f"  Start afstand: {start_distance}m")
+    print(f"  Trede hoogte: {step_height*100:.1f}cm ({step_height}m)")
+    print(f"  Trede diepte: {step_depth*100:.1f}cm ({step_depth}m)")
+    print(f"  Trap breedte: {step_width*100:.1f}cm ({step_width}m)")
+    print(f"  Start afstand: {start_distance*100:.1f}cm ({start_distance}m)")
     print(f"\nTraining Parameters:")
     print(f"  Algorithm: {algorithm}")
     print(f"  Total timesteps: {total_timesteps}")
@@ -231,30 +231,31 @@ def main():
     parser.add_argument(
         "--step-height",
         type=float,
-        default=0.15,
-        help="Hoogte per trede in meters (default: 0.15)"
+        default=15.0,
+        help="Hoogte per trede in centimeters (default: 15.0)"
     )
     parser.add_argument(
         "--step-depth",
         type=float,
-        default=0.25,
-        help="Diepte per trede in meters (default: 0.25)"
+        default=25.0,
+        help="Diepte per trede in centimeters (default: 25.0)"
     )
     parser.add_argument(
         "--step-width",
         type=float,
-        default=0.5,
-        help="Breedte van trap in meters (default: 0.5)"
+        default=50.0,
+        help="Breedte van trap in centimeters (default: 50.0)"
     )
     parser.add_argument(
         "--start-distance",
         type=float,
-        default=1.0,
-        help="Afstand van robot tot trap in meters (default: 1.0)"
+        default=100.0,
+        help="Afstand van robot tot trap in centimeters (default: 100.0)"
     )
     
     args = parser.parse_args()
     
+    # Converteer centimeters naar meters voor PyBullet
     train(
         algorithm=args.algorithm,
         total_timesteps=args.timesteps,
@@ -262,10 +263,10 @@ def main():
         save_path=args.save_path,
         load_model=args.load_model,
         num_steps=args.num_steps,
-        step_height=args.step_height,
-        step_depth=args.step_depth,
-        step_width=args.step_width,
-        start_distance=args.start_distance
+        step_height=args.step_height / 100.0,  # cm naar m
+        step_depth=args.step_depth / 100.0,    # cm naar m
+        step_width=args.step_width / 100.0,     # cm naar m
+        start_distance=args.start_distance / 100.0  # cm naar m
     )
 
 

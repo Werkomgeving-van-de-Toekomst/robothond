@@ -229,24 +229,28 @@ Je kunt de Go2 robot leren traplopen met configureerbare trap dimensies:
 # Basis training met standaard trap (5 treden, 15cm hoog, 25cm diep)
 python src/examples/train_stairs.py --algorithm PPO --timesteps 200000
 
-# Custom trap dimensies
+# Custom trap dimensies (in centimeters!)
 python src/examples/train_stairs.py \
     --algorithm PPO \
     --timesteps 200000 \
     --num-steps 8 \
-    --step-height 0.12 \
-    --step-depth 0.30 \
-    --step-width 0.6 \
-    --start-distance 1.5
+    --step-height 12 \
+    --step-depth 30 \
+    --step-width 60 \
+    --start-distance 150
 ```
 
 ### Trap Parameters
 
+Alle dimensies worden in **centimeters** aangegeven:
+
 - `--num-steps`: Aantal treden (default: 5)
-- `--step-height`: Hoogte per trede in meters (default: 0.15)
-- `--step-depth`: Diepte per trede in meters (default: 0.25)
-- `--step-width`: Breedte van trap in meters (default: 0.5)
-- `--start-distance`: Afstand van robot tot trap in meters (default: 1.0)
+- `--step-height`: Hoogte per trede in centimeters (default: 15.0)
+- `--step-depth`: Diepte per trede in centimeters (default: 25.0)
+- `--step-width`: Breedte van trap in centimeters (default: 50.0)
+- `--start-distance`: Afstand van robot tot trap in centimeters (default: 100.0)
+
+**Let op**: De scripts converteren automatisch centimeters naar meters voor PyBullet.
 
 ### Evalueren Traplopen Model
 
@@ -254,11 +258,11 @@ python src/examples/train_stairs.py \
 # Evalueer met opgeslagen trap configuratie
 python src/examples/evaluate_stairs.py models/go2_stairs/best_model/best_model.zip
 
-# Evalueer met andere trap dimensies
+# Evalueer met andere trap dimensies (in centimeters!)
 python src/examples/evaluate_stairs.py models/go2_stairs/best_model/best_model.zip \
     --num-steps 8 \
-    --step-height 0.12 \
-    --step-depth 0.30
+    --step-height 12 \
+    --step-depth 30
 ```
 
 ### Traplopen Reward Functie
@@ -276,7 +280,7 @@ De traplopen reward functie beloont:
 
 ### Tips voor Traplopen Training
 
-1. **Start met kleine treden**: Begin met `--step-height 0.10` en `--num-steps 3`
+1. **Start met kleine treden**: Begin met `--step-height 10` (10cm) en `--num-steps 3`
 2. **Verhoog geleidelijk**: Train eerst op makkelijke trap, dan moeilijker
 3. **Gebruik transfer learning**: Train eerst op vlakke grond, dan op trap
 4. **Monitor success rate**: Check of robot de top bereikt tijdens evaluatie

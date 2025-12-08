@@ -46,8 +46,12 @@ def evaluate(
             stair_config = loaded_config
         print(f"\nTrap Configuratie:")
         print(f"  Aantal treden: {stair_config.get('num_steps', 'N/A')}")
-        print(f"  Trede hoogte: {stair_config.get('step_height', 'N/A')}m")
-        print(f"  Trede diepte: {stair_config.get('step_depth', 'N/A')}m")
+        step_h = stair_config.get('step_height', None)
+        step_d = stair_config.get('step_depth', None)
+        if step_h is not None:
+            print(f"  Trede hoogte: {step_h*100:.1f}cm ({step_h}m)")
+        if step_d is not None:
+            print(f"  Trede diepte: {step_d*100:.1f}cm ({step_d}m)")
     elif stair_config is None:
         stair_config = {}
     
@@ -149,13 +153,13 @@ def main():
         "--step-height",
         type=float,
         default=None,
-        help="Hoogte per trede in meters (override config)"
+        help="Hoogte per trede in centimeters (override config)"
     )
     parser.add_argument(
         "--step-depth",
         type=float,
         default=None,
-        help="Diepte per trede in meters (override config)"
+        help="Diepte per trede in centimeters (override config)"
     )
     
     args = parser.parse_args()
@@ -164,9 +168,9 @@ def main():
     if args.num_steps is not None:
         stair_config["num_steps"] = args.num_steps
     if args.step_height is not None:
-        stair_config["step_height"] = args.step_height
+        stair_config["step_height"] = args.step_height / 100.0  # cm naar m
     if args.step_depth is not None:
-        stair_config["step_depth"] = args.step_depth
+        stair_config["step_depth"] = args.step_depth / 100.0  # cm naar m
     
     evaluate(
         model_path=args.model_path,
