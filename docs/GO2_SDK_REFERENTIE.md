@@ -475,6 +475,16 @@ finally:
 ## Referenties
 
 - [Go2 Handleiding](./GO2_HANDLEIDING.md)
+- [Go2 SDK Repositories](./GO2_SDK_REPOSITORIES.md) - Officiële GitHub repositories
 - [Unitree Developer Documentation](https://support.unitree.com/home/en/developer)
 - [Project README](../README.md)
+
+## Officiële SDK Repositories
+
+- **unitree_sdk2**: https://github.com/unitreerobotics/unitree_sdk2 (C++ SDK)
+- **unitree_sdk2_python**: https://github.com/unitreerobotics/unitree_sdk2_python (Python wrapper)
+- **unitree_ros2**: https://github.com/unitreerobotics/unitree_ros2 (ROS2 pakket)
+- **go2_description**: https://github.com/Unitree-Go2-Robot/go2_description (URDF bestanden)
+
+Zie [GO2_SDK_REPOSITORIES.md](./GO2_SDK_REPOSITORIES.md) voor volledige details.
 
