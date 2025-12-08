@@ -122,7 +122,15 @@ def test_cyclonedds():
     # Test cyclonedds import
     try:
         import cyclonedds
-        results.append(check_mark(True, f"cyclonedds Python package geïnstalleerd (versie: {cyclonedds.__version__})"))
+        # cyclonedds heeft geen __version__, maar we kunnen checken of het werkt
+        try:
+            version = getattr(cyclonedds, '__version__', 'geïnstalleerd')
+            if version == 'geïnstalleerd':
+                results.append(check_mark(True, "cyclonedds Python package geïnstalleerd"))
+            else:
+                results.append(check_mark(True, f"cyclonedds Python package geïnstalleerd (versie: {version})"))
+        except AttributeError:
+            results.append(check_mark(True, "cyclonedds Python package geïnstalleerd"))
     except ImportError:
         results.append(check_mark(False, "cyclonedds Python package niet geïnstalleerd"))
         print("  💡 Tip: pip install cyclonedds==0.10.2 (na CYCLONEDDS_HOME te zetten)")

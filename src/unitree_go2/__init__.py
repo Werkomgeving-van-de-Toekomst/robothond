@@ -9,6 +9,14 @@ from .exceptions import Go2ConnectionError, Go2CommandError
 from .config import load_config
 from .flow_executor import FlowExecutor, FlowAction, ActionType, create_welcome_flow
 
+# Probeer web search te importeren
+try:
+    from .web_search import WebSearcher
+    HAS_WEB_SEARCH = True
+except ImportError:
+    HAS_WEB_SEARCH = False
+    WebSearcher = None
+
 # Probeer officiële SDK wrapper te importeren
 try:
     from .robot_official import Go2RobotOfficial
@@ -29,6 +37,9 @@ __all__ = [
     "create_welcome_flow",
     "HAS_OFFICIAL_SDK",
 ]
+
+if HAS_WEB_SEARCH:
+    __all__.append("WebSearcher")
 
 if HAS_OFFICIAL_SDK:
     __all__.append("Go2RobotOfficial")
