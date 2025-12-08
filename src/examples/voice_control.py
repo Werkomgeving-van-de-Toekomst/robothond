@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.voice.voice_controller import Go2VoiceController
 from src.unitree_go2.robot import Go2Robot
+from src.unitree_go2.web_search import WebSearcher
 
 
 def main():
@@ -84,6 +85,8 @@ def main():
     print("  - 'stop' - Stop alle beweging")
     print("  - 'model [naam]' - Selecteer RL model")
     print("  - 'start' - Start RL control")
+    print("  - 'zoek [term]' - Zoek op internet")
+    print("  - 'vind [term]' - Zoek op internet")
     print("  - 'help' - Toon help")
     print("\nDruk Ctrl+C om te stoppen\n")
     
@@ -99,19 +102,30 @@ def main():
             print("   Gebruik --api voor API server mode")
             robot = None
     
-    # Setup voice controller
-    openai_key = args.openai_key or os.getenv("OPENAI_API_KEY")
-    
-    try:
-        controller = Go2VoiceController(
-            robot=robot,
-            api_base=args.api,
-            language=args.language,
-            use_whisper=args.whisper,
-            whisper_model=args.whisper_model,
-            use_openai_api=args.openai_api,
-            openai_api_key=openai_key
-        )
+        # Setup web searcher (voor internet zoeken)
+        web_searcher = None
+        if args.display_url or True:  # Altijd beschikbaar maken
+            try:
+                web_searcher = WebSearcher()
+                print("✓ Web searcher geïnitialiseerd")
+            except Exception as e:
+                print(f"⚠️  Kon web searcher niet initialiseren: {e}")
+        
+        # Setup voice controller
+        openai_key = args.openai_key or os.getenv("OPENAI_API_KEY")
+        
+        try:
+            controller = Go2VoiceController(
+                robot=robot,
+                api_base=args.api,
+                language=args.language,
+                use_whisper=args.whisper,
+                whisper_model=args.whisper_model,
+                use_openai_api=args.openai_api,
+                openai_api_key=openai_key,
+                web_searcher=web_searcher,
+                display_api_url=args.display_url
+            )
         
         print("✓ Voice controller geïnitialiseerd")
         

@@ -51,15 +51,22 @@ De eerste keer dat je Whisper gebruikt wordt het model automatisch gedownload.
 python src/examples/voice_control.py --robot-ip 192.168.123.161
 ```
 
-### Via API Server
+### Via API Server met Display
 
 ```bash
-# Terminal 1: Start API server
+# Terminal 1: Start display server
+python src/controller_app/display_server.py --port 5001
+
+# Terminal 2: Start API server
 python src/controller_app/model_api_server.py --host 0.0.0.0 --port 5000
 
-# Terminal 2: Start voice control
-python src/examples/voice_control.py --api http://localhost:5000/api
+# Terminal 3: Start voice control met display
+python src/examples/voice_control.py \
+    --api http://localhost:5000/api \
+    --display-url http://localhost:5001/api
 ```
+
+Open `http://localhost:5001` in browser om resultaten te zien.
 
 ### Met Lokale Whisper (Open Source, Aanbevolen)
 
@@ -98,6 +105,15 @@ python src/examples/voice_control.py \
 - **"selecteer model [naam]"** - Selecteer model
 - **"start"** of **"start rl"** - Start RL control
 - **"stop rl"** - Stop RL control
+
+### Internet Zoeken Commando's
+
+- **"zoek [term]"** - Zoek op internet (bijv. "zoek Unitree Go2")
+- **"vind [term]"** - Zoek op internet
+- **"google [term]"** - Zoek op internet
+- **"zoek op internet [term]"** - Zoek op internet
+
+Resultaten worden automatisch getoond op gekoppelde PC display (als display server draait).
 
 ### Voorbeelden
 

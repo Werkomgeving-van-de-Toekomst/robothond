@@ -346,6 +346,8 @@ class Go2VoiceController(VoiceController):
         api_base: Optional[str] = None,
         use_whisper: bool = False,
         whisper_model: str = "base",
+        web_searcher=None,
+        display_api_url: Optional[str] = None,
         **kwargs
     ):
         """
@@ -356,12 +358,16 @@ class Go2VoiceController(VoiceController):
             api_base: API server URL (bijv. "http://localhost:5000/api")
             use_whisper: Gebruik lokale Whisper (open source)
             whisper_model: Whisper model grootte (tiny, base, small, medium, large)
+            web_searcher: Optionele web searcher voor internet zoeken
+            display_api_url: URL van display server API (bijv. "http://localhost:5001/api")
             **kwargs: Extra argumenten voor VoiceController
         """
         super().__init__(use_whisper=use_whisper, whisper_model=whisper_model, **kwargs)
         
         self.robot = robot
         self.api_base = api_base
+        self.web_searcher = web_searcher
+        self.display_api_url = display_api_url
         
         # State
         self.current_model: Optional[str] = None
@@ -382,6 +388,12 @@ class Go2VoiceController(VoiceController):
         self.register_command(r"start\s+control", self.handle_start)
         self.register_command(r"stop\s+rl", self.handle_stop)
         self.register_command(r"stop\s+control", self.handle_stop)
+        
+        # Web search patterns
+        self.register_command(r"zoek\s+(.+)", self.handle_web_search)
+        self.register_command(r"zoek\s+op\s+internet\s+(.+)", self.handle_web_search)
+        self.register_command(r"vind\s+(.+)", self.handle_web_search)
+        self.register_command(r"google\s+(.+)", self.handle_web_search)
     
     def handle_stop(self, text: str):
         """Stop robot beweging"""

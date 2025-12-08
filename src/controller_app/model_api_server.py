@@ -449,6 +449,36 @@ def voice_command():
         }), 500
 
 
+@app.route('/api/web/search', methods=['POST'])
+def web_search():
+    """Zoek op internet via API"""
+    try:
+        data = request.get_json()
+        query = data.get("query", "")
+        
+        if not query:
+            return jsonify({
+                "status": "error",
+                "message": "Geen zoekterm opgegeven"
+            }), 400
+        
+        from src.unitree_go2.web_search import WebSearcher
+        searcher = WebSearcher()
+        results = searcher.search(query, max_results=5)
+        
+        return jsonify({
+            "status": "ok",
+            "query": query,
+            "results": results,
+            "count": len(results)
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+
 @app.route('/api/health', methods=['GET'])
 def health():
     """Health check endpoint"""
