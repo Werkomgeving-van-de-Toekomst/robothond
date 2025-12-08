@@ -26,14 +26,22 @@ brew install portaudio
 pip install pyaudio
 ```
 
-### Stap 2: Optioneel - OpenAI Whisper (Betere kwaliteit)
+### Stap 2: Optioneel - OpenAI Whisper (Open Source, Aanbevolen)
 
-Voor betere spraakherkenning kun je OpenAI Whisper gebruiken:
+Voor betere spraakherkenning kun je de open source OpenAI Whisper gebruiken:
 
 ```bash
-pip install openai
-export OPENAI_API_KEY="jouw-api-key"
+pip install openai-whisper scipy
 ```
+
+**Model opties** (van klein naar groot, langzamer maar beter):
+- `tiny` - Kleinste, snelste
+- `base` - Goede balans (aanbevolen)
+- `small` - Betere kwaliteit
+- `medium` - Zeer goede kwaliteit
+- `large` - Beste kwaliteit, langzaamste
+
+De eerste keer dat je Whisper gebruikt wordt het model automatisch gedownload.
 
 ## Basis Gebruik
 
@@ -53,12 +61,24 @@ python src/controller_app/model_api_server.py --host 0.0.0.0 --port 5000
 python src/examples/voice_control.py --api http://localhost:5000/api
 ```
 
-### Met OpenAI Whisper
+### Met Lokale Whisper (Open Source, Aanbevolen)
 
 ```bash
 python src/examples/voice_control.py \
     --api http://localhost:5000/api \
-    --openai \
+    --whisper \
+    --whisper-model base
+```
+
+### Met OpenAI API (Alternatief)
+
+```bash
+pip install openai
+export OPENAI_API_KEY="jouw-api-key"
+
+python src/examples/voice_control.py \
+    --api http://localhost:5000/api \
+    --openai-api \
     --openai-key jouw-api-key
 ```
 
@@ -199,7 +219,21 @@ pip install pipwin
 pipwin install pyaudio
 ```
 
-### OpenAI API Key
+### Whisper Model Grootte
+
+Kies model grootte op basis van je behoeften:
+
+- **tiny**: ~39 MB, snelste, basis kwaliteit
+- **base**: ~74 MB, goede balans (aanbevolen voor start)
+- **small**: ~244 MB, betere kwaliteit
+- **medium**: ~769 MB, zeer goede kwaliteit
+- **large**: ~1550 MB, beste kwaliteit, langzaamste
+
+Gebruik `--whisper-model base` voor goede balans tussen snelheid en kwaliteit.
+
+### OpenAI API (Alternatief)
+
+Als je de API wilt gebruiken in plaats van lokale Whisper:
 
 1. Maak account op https://platform.openai.com
 2. Genereer API key
@@ -208,6 +242,7 @@ pipwin install pyaudio
    export OPENAI_API_KEY="jouw-key"
    ```
 4. Of gebruik `--openai-key` parameter
+5. Gebruik `--openai-api` flag
 
 ## Geavanceerd Gebruik
 

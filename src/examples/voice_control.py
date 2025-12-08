@@ -39,9 +39,21 @@ def main():
         help="Taal voor spraakherkenning (default: nl-NL)"
     )
     parser.add_argument(
-        "--openai",
+        "--whisper",
         action="store_true",
-        help="Gebruik OpenAI Whisper (vereist API key)"
+        help="Gebruik lokale OpenAI Whisper (open source)"
+    )
+    parser.add_argument(
+        "--whisper-model",
+        type=str,
+        default="base",
+        choices=["tiny", "base", "small", "medium", "large"],
+        help="Whisper model grootte (default: base)"
+    )
+    parser.add_argument(
+        "--openai-api",
+        action="store_true",
+        help="Gebruik OpenAI API (vereist API key)"
     )
     parser.add_argument(
         "--openai-key",
@@ -56,7 +68,10 @@ def main():
     print("  Voice Control voor Go2 Robot")
     print("=" * 70)
     print(f"\nTaal: {args.language}")
-    print(f"OpenAI: {args.openai}")
+    print(f"Whisper (lokaal): {args.whisper}")
+    if args.whisper:
+        print(f"  Model: {args.whisper_model}")
+    print(f"OpenAI API: {args.openai_api}")
     
     if args.api:
         print(f"API Server: {args.api}")
@@ -92,7 +107,9 @@ def main():
             robot=robot,
             api_base=args.api,
             language=args.language,
-            use_openai=args.openai,
+            use_whisper=args.whisper,
+            whisper_model=args.whisper_model,
+            use_openai_api=args.openai_api,
             openai_api_key=openai_key
         )
         

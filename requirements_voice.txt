@@ -3,6 +3,10 @@ SpeechRecognition>=3.10.0
 pyttsx3>=2.90
 pyaudio>=0.2.11
 
-# Optioneel: Voor betere spraakherkenning
-openai>=1.0.0  # Voor Whisper API
+# OpenAI Whisper (open source) - Aanbevolen voor betere kwaliteit
+openai-whisper>=20231117
+scipy>=1.10.0  # Voor audio resampling
+
+# Optioneel: Voor OpenAI API (in plaats van lokale Whisper)
+# openai>=1.0.0
 

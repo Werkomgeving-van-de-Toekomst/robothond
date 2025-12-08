@@ -24,10 +24,16 @@ except ImportError:
     )
 
 try:
-    import openai
-    HAS_OPENAI = True
+    import whisper
+    HAS_WHISPER = True
 except ImportError:
-    HAS_OPENAI = False
+    HAS_WHISPER = False
+
+try:
+    import openai
+    HAS_OPENAI_API = True
+except ImportError:
+    HAS_OPENAI_API = False
 
 
 class VoiceController:
@@ -40,7 +46,9 @@ class VoiceController:
     def __init__(
         self,
         language: str = "nl-NL",
-        use_openai: bool = False,
+        use_whisper: bool = False,
+        whisper_model: str = "base",
+        use_openai_api: bool = False,
         openai_api_key: Optional[str] = None
     ):
         """
@@ -48,11 +56,15 @@ class VoiceController:
         
         Args:
             language: Taal voor spraakherkenning (default: nl-NL)
-            use_openai: Gebruik OpenAI Whisper voor betere herkenning
-            openai_api_key: OpenAI API key (vereist als use_openai=True)
+            use_whisper: Gebruik lokale OpenAI Whisper (open source)
+            whisper_model: Whisper model grootte (tiny, base, small, medium, large)
+            use_openai_api: Gebruik OpenAI API (in plaats van lokale Whisper)
+            openai_api_key: OpenAI API key (vereist als use_openai_api=True)
         """
         self.language = language
-        self.use_openai = use_openai and HAS_OPENAI
+        self.use_whisper = use_whisper and HAS_WHISPER
+        self.use_openai_api = use_openai_api and HAS_OPENAI_API
+        self.whisper_model_name = whisper_model
         
         # Spraakherkenning
         self.recognizer = sr.Recognizer()
@@ -63,10 +75,17 @@ class VoiceController:
         self.tts_engine.setProperty('rate', 150)  # Spreeksnelheid
         self.tts_engine.setProperty('volume', 0.9)
         
-        # OpenAI setup
-        if self.use_openai:
+        # Whisper setup (lokaal)
+        self.whisper_model = None
+        if self.use_whisper:
+            print(f"✓ Whisper model laden: {whisper_model}")
+            self.whisper_model = whisper.load_model(whisper_model)
+            print("✓ Whisper model geladen")
+        
+        # OpenAI API setup
+        if self.use_openai_api:
             if not openai_api_key:
-                raise ValueError("OpenAI API key vereist voor OpenAI mode")
+                raise ValueError("OpenAI API key vereist voor OpenAI API mode")
             openai.api_key = openai_api_key
         
         # Commando handlers
@@ -126,9 +145,12 @@ class VoiceController:
             # Herken spraak
             print("🧠 Spraak herkennen...")
             
-            if self.use_openai:
-                # Gebruik OpenAI Whisper (betere kwaliteit)
-                return self._recognize_with_openai(audio)
+            if self.use_whisper:
+                # Gebruik lokale OpenAI Whisper (open source)
+                return self._recognize_with_whisper(audio)
+            elif self.use_openai_api:
+                # Gebruik OpenAI API
+                return self._recognize_with_openai_api(audio)
             else:
                 # Gebruik Google Speech Recognition
                 try:
@@ -148,8 +170,42 @@ class VoiceController:
             print(f"❌ Fout: {e}")
             return None
     
-    def _recognize_with_openai(self, audio) -> Optional[str]:
-        """Gebruik OpenAI Whisper voor spraakherkenning"""
+    def _recognize_with_whisper(self, audio) -> Optional[str]:
+        """Gebruik lokale OpenAI Whisper (open source) voor spraakherkenning"""
+        try:
+            if not self.whisper_model:
+                print("⚠️  Whisper model niet geladen")
+                return None
+            
+            # Converteer audio naar numpy array
+            import numpy as np
+            
+            # Audio data naar numpy
+            audio_data = np.frombuffer(audio.get_raw_data(), dtype=np.int16).astype(np.float32) / 32768.0
+            
+            # Whisper verwacht sample rate 16000
+            if audio.sample_rate != 16000:
+                # Resample indien nodig (simpele versie - gebruik librosa voor betere kwaliteit)
+                import scipy.signal
+                num_samples = int(len(audio_data) * 16000 / audio.sample_rate)
+                audio_data = scipy.signal.resample(audio_data, num_samples)
+            
+            # Transcribe met Whisper
+            result = self.whisper_model.transcribe(
+                audio_data,
+                language="nl" if "nl" in self.language.lower() else None,
+                task="transcribe"
+            )
+            
+            return result["text"].strip()
+        except Exception as e:
+            print(f"❌ Whisper fout: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
+    
+    def _recognize_with_openai_api(self, audio) -> Optional[str]:
+        """Gebruik OpenAI API voor spraakherkenning"""
         try:
             # Converteer audio naar WAV
             import io
@@ -173,7 +229,7 @@ class VoiceController:
             
             return response["text"]
         except Exception as e:
-            print(f"❌ OpenAI fout: {e}")
+            print(f"❌ OpenAI API fout: {e}")
             return None
     
     def process_command(self, text: str) -> bool:
@@ -284,6 +340,8 @@ class Go2VoiceController(VoiceController):
         self,
         robot=None,
         api_base: Optional[str] = None,
+        use_whisper: bool = False,
+        whisper_model: str = "base",
         **kwargs
     ):
         """
@@ -292,9 +350,11 @@ class Go2VoiceController(VoiceController):
         Args:
             robot: Go2Robot instantie (optioneel)
             api_base: API server URL (bijv. "http://localhost:5000/api")
+            use_whisper: Gebruik lokale Whisper (open source)
+            whisper_model: Whisper model grootte (tiny, base, small, medium, large)
             **kwargs: Extra argumenten voor VoiceController
         """
-        super().__init__(**kwargs)
+        super().__init__(use_whisper=use_whisper, whisper_model=whisper_model, **kwargs)
         
         self.robot = robot
         self.api_base = api_base
