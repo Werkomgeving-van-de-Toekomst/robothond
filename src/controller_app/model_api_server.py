@@ -351,6 +351,104 @@ def send_command():
         }), 500
 
 
+@app.route('/api/voice/command', methods=['POST'])
+def voice_command():
+    """Ontvang voice commando en verwerk"""
+    global current_controller, model_manager
+    
+    try:
+        data = request.get_json()
+        command_text = data.get("command", "").strip()
+        
+        if not command_text:
+            return jsonify({
+                "status": "error",
+                "message": "Geen commando tekst"
+            }), 400
+        
+        # Verwerk commando (simpele tekst matching)
+        command_lower = command_text.lower()
+        
+        # Model selectie
+        import re
+        model_match = re.search(r"model\s+(\w+)|gebruik\s+model\s+(\w+)|selecteer\s+model\s+(\w+)", command_lower)
+        if model_match:
+            model_name = model_match.group(1) or model_match.group(2) or model_match.group(3)
+            # Laad en activeer model
+            if model_manager:
+                try:
+                    model_manager.load_model(model_name, f"models/{model_name}/best_model/best_model.zip")
+                    model_manager.switch_model(model_name)
+                    return jsonify({
+                        "status": "ok",
+                        "message": f"Model {model_name} geactiveerd",
+                        "action": "model_selected",
+                        "model": model_name
+                    })
+                except:
+                    return jsonify({
+                        "status": "error",
+                        "message": f"Model {model_name} niet gevonden"
+                    }), 404
+        
+        # Start control
+        if "start" in command_lower and ("rl" in command_lower or "control" in command_lower):
+            if not current_controller:
+                return jsonify({
+                    "status": "error",
+                    "message": "Geen model geactiveerd"
+                }), 400
+            is_running = True
+            return jsonify({
+                "status": "ok",
+                "message": "RL control gestart",
+                "action": "control_started"
+            })
+        
+        # Stop control
+        if "stop" in command_lower:
+            is_running = False
+            if robot:
+                robot.stop()
+            return jsonify({
+                "status": "ok",
+                "message": "Robot gestopt",
+                "action": "stopped"
+            })
+        
+        # Stand
+        if "sta op" in command_lower or "sta rechtop" in command_lower:
+            if robot:
+                robot.stand()
+            return jsonify({
+                "status": "ok",
+                "message": "Robot staat rechtop",
+                "action": "stand"
+            })
+        
+        # Sit
+        if "ga zitten" in command_lower or "zit" in command_lower:
+            if robot:
+                robot.sit()
+            return jsonify({
+                "status": "ok",
+                "message": "Robot gaat zitten",
+                "action": "sit"
+            })
+        
+        # Onbekend commando
+        return jsonify({
+            "status": "error",
+            "message": f"Commando niet herkend: {command_text}"
+        }), 400
+        
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+
 @app.route('/api/health', methods=['GET'])
 def health():
     """Health check endpoint"""
