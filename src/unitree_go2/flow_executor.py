@@ -411,6 +411,37 @@ class FlowExecutor:
         self.is_running = False
         self.robot.stop()
     
+    def _update_display(self, title: str, content: str, display_type: str = "text"):
+        """Update display via API"""
+        try:
+            import requests
+            requests.post(
+                f"{self.display_api_url}/display",
+                json={
+                    "title": title,
+                    "content": content,
+                    "type": display_type
+                },
+                timeout=2
+            )
+        except Exception as e:
+            print(f"⚠️  Kon display niet updaten: {e}")
+    
+    def _update_display_search(self, query: str, results: List[Dict[str, Any]]):
+        """Update display met zoekresultaten"""
+        try:
+            import requests
+            requests.post(
+                f"{self.display_api_url}/display/search",
+                json={
+                    "query": query,
+                    "results": results
+                },
+                timeout=2
+            )
+        except Exception as e:
+            print(f"⚠️  Kon zoekresultaten niet tonen: {e}")
+    
     def load_flow_from_yaml(self, yaml_path: str) -> List[Dict[str, Any]]:
         """
         Laad flow uit YAML bestand
