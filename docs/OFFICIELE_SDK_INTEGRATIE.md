@@ -28,20 +28,34 @@ cd unitree_sdk2_python
 pip install -e .
 ```
 
-**Op macOS**: Mogelijk moet je CycloneDDS eerst compileren:
+**Op macOS**: Je moet CycloneDDS eerst compileren. Gebruik het install script:
 
 ```bash
-# Installeer CycloneDDS
+# Automatische installatie (aanbevolen)
+./install_cyclonedds_macos.sh
+
+# Of handmatig:
+# 1. Installeer dependencies
+brew install cmake pkg-config
+
+# 2. Clone en compileer CycloneDDS
+cd ~
 git clone https://github.com/eclipse-cyclonedds/cyclonedds -b releases/0.10.x
 cd cyclonedds && mkdir build install && cd build
-cmake .. -DCMAKE_INSTALL_PREFIX=../install
+cmake .. -DCMAKE_INSTALL_PREFIX=../install -DCMAKE_BUILD_TYPE=Release
 cmake --build . --target install
 
-# Set environment variable
-export CYCLONEDDS_HOME="~/cyclonedds/install"
+# 3. Set environment variable
+export CYCLONEDDS_HOME="$HOME/cyclonedds/install"
 
-# Installeer SDK
-cd ../../unitree_sdk2_python
+# 4. Voeg toe aan .zshrc (voor permanente export)
+echo 'export CYCLONEDDS_HOME="$HOME/cyclonedds/install"' >> ~/.zshrc
+
+# 5. Installeer cyclonedds Python package
+pip install cyclonedds==0.10.2
+
+# 6. Installeer SDK
+cd unitree_sdk2_python
 pip install -e .
 ```
 
