@@ -179,8 +179,8 @@ def circle_walk_simulation():
             
             # Cirkel parameters
             circle_radius = 1.0  # meter
-            circle_speed = 0.3  # rad/s (hoek snelheid)
-            walk_frequency = 2.0  # Hz (stap frequentie)
+            circle_speed = 0.15  # rad/s (hoek snelheid) - langzamer voor beter volgen
+            walk_frequency = 1.5  # Hz (stap frequentie) - langzamer voor beter volgen
             
             # Loop parameters
             step_height = 0.05  # Hoogte van stap
@@ -193,7 +193,7 @@ def circle_walk_simulation():
             print(f"Loop snelheid: {circle_speed} rad/s\n")
             
             # Simuleer circulaire beweging
-            for step in range(2400):  # 10 seconden bij 240Hz
+            for step in range(4800):  # 20 seconden bij 240Hz (langer voor beter volgen)
                 t = step * (1.0 / 240.0)  # Tijd in seconden
                 
                 # Bereken positie op cirkel
