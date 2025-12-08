@@ -1,0 +1,50 @@
+# Voorbeeld Custom Flow
+# Toont verschillende actie types
+
+name: "Custom Flow Voorbeeld"
+description: "Demonstreert verschillende flow acties"
+
+actions:
+  - name: "Sta op"
+    type: stand
+    duration: 2.0
+    
+  - name: "Draai 90 graden"
+    type: rotate
+    params:
+      angle: 90      # In graden
+      speed: 0.5     # rad/s
+      
+  - name: "Loop vooruit"
+    type: move
+    params:
+      vx: 0.3
+      vy: 0.0
+      vyaw: 0.0
+    duration: 3.0
+    
+  - name: "Stop en spreek"
+    type: stop
+    duration: 0.5
+    
+  - name: "Groet"
+    type: voice_speak
+    params:
+      text: "Hallo! Ik ben de Go2 robot."
+    
+  - name: "Wacht"
+    type: wait
+    duration: 1.0
+    
+  - name: "Loop terug"
+    type: move
+    params:
+      vx: -0.3
+      vy: 0.0
+      vyaw: 0.0
+    duration: 3.0
+    
+  - name: "Ga zitten"
+    type: sit
+    duration: 2.0
+

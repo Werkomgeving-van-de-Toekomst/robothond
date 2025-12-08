@@ -185,10 +185,14 @@ class VoiceController:
             
             # Whisper verwacht sample rate 16000
             if audio.sample_rate != 16000:
-                # Resample indien nodig (simpele versie - gebruik librosa voor betere kwaliteit)
-                import scipy.signal
-                num_samples = int(len(audio_data) * 16000 / audio.sample_rate)
-                audio_data = scipy.signal.resample(audio_data, num_samples)
+                # Resample indien nodig
+                try:
+                    import scipy.signal
+                    num_samples = int(len(audio_data) * 16000 / audio.sample_rate)
+                    audio_data = scipy.signal.resample(audio_data, num_samples)
+                except ImportError:
+                    print("⚠️  scipy niet geïnstalleerd - audio resampling kan problemen geven")
+                    # Fallback: gebruik audio zoals het is (kan kwaliteit verminderen)
             
             # Transcribe met Whisper
             result = self.whisper_model.transcribe(
