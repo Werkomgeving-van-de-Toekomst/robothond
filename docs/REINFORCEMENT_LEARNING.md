@@ -219,6 +219,68 @@ python src/examples/train_rl.py \
     --save-path models/go2_standing
 ```
 
+## Traplopen
+
+### Trainen voor Traplopen
+
+Je kunt de Go2 robot leren traplopen met configureerbare trap dimensies:
+
+```bash
+# Basis training met standaard trap (5 treden, 15cm hoog, 25cm diep)
+python src/examples/train_stairs.py --algorithm PPO --timesteps 200000
+
+# Custom trap dimensies
+python src/examples/train_stairs.py \
+    --algorithm PPO \
+    --timesteps 200000 \
+    --num-steps 8 \
+    --step-height 0.12 \
+    --step-depth 0.30 \
+    --step-width 0.6 \
+    --start-distance 1.5
+```
+
+### Trap Parameters
+
+- `--num-steps`: Aantal treden (default: 5)
+- `--step-height`: Hoogte per trede in meters (default: 0.15)
+- `--step-depth`: Diepte per trede in meters (default: 0.25)
+- `--step-width`: Breedte van trap in meters (default: 0.5)
+- `--start-distance`: Afstand van robot tot trap in meters (default: 1.0)
+
+### Evalueren Traplopen Model
+
+```bash
+# Evalueer met opgeslagen trap configuratie
+python src/examples/evaluate_stairs.py models/go2_stairs/best_model/best_model.zip
+
+# Evalueer met andere trap dimensies
+python src/examples/evaluate_stairs.py models/go2_stairs/best_model/best_model.zip \
+    --num-steps 8 \
+    --step-height 0.12 \
+    --step-depth 0.30
+```
+
+### Traplopen Reward Functie
+
+De traplopen reward functie beloont:
+- **+5.0** per unit voorwaartse snelheid
+- **+10.0** voor dichterbij komen van volgende trede
+- **+50.0** voor het bereiken van een trede
+- **+100.0** voor het bereiken van de top
+- **-10.0** voor achteruit bewegen
+- **-5.0** voor zijwaartse beweging
+- **-2.0** voor rotatie
+- **-10.0** voor hoogte afwijking
+- **-100.0** voor vallen
+
+### Tips voor Traplopen Training
+
+1. **Start met kleine treden**: Begin met `--step-height 0.10` en `--num-steps 3`
+2. **Verhoog geleidelijk**: Train eerst op makkelijke trap, dan moeilijker
+3. **Gebruik transfer learning**: Train eerst op vlakke grond, dan op trap
+4. **Monitor success rate**: Check of robot de top bereikt tijdens evaluatie
+
 ## Referenties
 
 - [Stable-Baselines3 Documentation](https://stable-baselines3.readthedocs.io/)
