@@ -18,7 +18,7 @@ if sdk_path.exists():
 try:
     from unitree_sdk2py.go2.sport.sport_client import SportClient
     from unitree_sdk2py.go2.robot_state.robot_state_client import RobotStateClient
-    from unitree_sdk2py.idl.unitree_go import msg as go_msg
+    from unitree_sdk2py.core.channel import ChannelFactoryInitialize
     HAS_OFFICIAL_SDK = True
 except ImportError:
     HAS_OFFICIAL_SDK = False
@@ -118,13 +118,16 @@ class Go2RobotOfficial:
             Go2ConnectionError: Als verbinding mislukt
         """
         try:
+            # Initialiseer DDS channel factory met netwerk interface
+            ChannelFactoryInitialize(0, self.network_interface)
+            
             # Initialiseer sport client (voor beweging)
-            self.sport_client = SportClient(self.network_interface)
+            self.sport_client = SportClient()
             self.sport_client.SetTimeout(self.timeout)
             self.sport_client.Init()
             
             # Initialiseer robot state client (voor sensor data)
-            self.robot_state_client = RobotStateClient(self.network_interface)
+            self.robot_state_client = RobotStateClient()
             self.robot_state_client.SetTimeout(self.timeout)
             self.robot_state_client.Init()
             
@@ -153,16 +156,12 @@ class Go2RobotOfficial:
             raise Go2ConnectionError("Niet verbonden met robot")
         
         try:
-            # Gebruik officiële SDK stand commando
-            req = go_msg.Request()
-            req.RequestId = 1
-            req.RequestType = go_msg.Request.RequestTypeEnum.STAND
-            
-            code = self.sport_client.Request(req)
+            # Gebruik officiële SDK StandUp methode
+            code = self.sport_client.StandUp()
             if code != 0:
                 raise Go2CommandError(f"Stand commando mislukt met code: {code}")
             
-            return {"status": "ok", "message": "Stand command sent"}
+            return {"status": "ok", "message": "Stand command sent", "code": code}
             
         except Exception as e:
             raise Go2CommandError(f"Fout bij stand commando: {e}")
@@ -173,15 +172,12 @@ class Go2RobotOfficial:
             raise Go2ConnectionError("Niet verbonden met robot")
         
         try:
-            req = go_msg.Request()
-            req.RequestId = 1
-            req.RequestType = go_msg.Request.RequestTypeEnum.DOWN
-            
-            code = self.sport_client.Request(req)
+            # Gebruik officiële SDK StandDown methode
+            code = self.sport_client.StandDown()
             if code != 0:
                 raise Go2CommandError(f"Sit commando mislukt met code: {code}")
             
-            return {"status": "ok", "message": "Sit command sent"}
+            return {"status": "ok", "message": "Sit command sent", "code": code}
             
         except Exception as e:
             raise Go2CommandError(f"Fout bij sit commando: {e}")
@@ -199,29 +195,30 @@ class Go2RobotOfficial:
             raise Go2ConnectionError("Niet verbonden met robot")
         
         try:
-            # Maak velocity commando
-            req = go_msg.Request()
-            req.RequestId = 1
-            req.RequestType = go_msg.Request.RequestTypeEnum.VELOCITY
-            
-            # Set velocity parameters
-            req.Velocity = go_msg.Velocity()
-            req.Velocity.VelocityX = vx
-            req.Velocity.VelocityY = vy
-            req.Velocity.VelocityYaw = vyaw
-            
-            code = self.sport_client.Request(req)
+            # Gebruik officiële SDK Move methode
+            code = self.sport_client.Move(vx, vy, vyaw)
             if code != 0:
                 raise Go2CommandError(f"Move commando mislukt met code: {code}")
             
-            return {"status": "ok", "message": "Move command sent"}
+            return {"status": "ok", "message": "Move command sent", "code": code}
             
         except Exception as e:
             raise Go2CommandError(f"Fout bij move commando: {e}")
     
     def stop(self):
         """Stop alle beweging"""
-        return self.move(0.0, 0.0, 0.0)
+        if not self.connected:
+            raise Go2ConnectionError("Niet verbonden met robot")
+        
+        try:
+            # Gebruik officiële SDK StopMove methode
+            code = self.sport_client.StopMove()
+            if code != 0:
+                raise Go2CommandError(f"Stop commando mislukt met code: {code}")
+            
+            return {"status": "ok", "message": "Stop command sent", "code": code}
+        except Exception as e:
+            raise Go2CommandError(f"Fout bij stop commando: {e}")
     
     def get_state(self) -> Dict[str, Any]:
         """
@@ -229,40 +226,29 @@ class Go2RobotOfficial:
         
         Returns:
             Dictionary met robot status informatie
+            
+        Note: Officiële SDK gebruikt subscription model voor state.
+        Deze implementatie is een vereenvoudigde versie.
         """
         if not self.connected:
             raise Go2ConnectionError("Niet verbonden met robot")
         
         try:
-            # Haal robot state op
-            state = go_msg.State()
-            code = self.robot_state_client.GetState(state)
+            # Officiële SDK gebruikt subscription model voor robot state
+            # Voor nu retourneren we een basis state structuur
+            # Voor volledige state, gebruik RobotStateClient subscription
             
-            if code != 0:
-                raise Go2CommandError(f"Get state mislukt met code: {code}")
-            
-            # Converteer naar ons formaat
             result = {
-                "battery_level": getattr(state, 'BatteryState', {}).get('BatteryPercent', 0) if hasattr(state, 'BatteryState') else 0,
-                "base_position": [
-                    getattr(state, 'Position', [0, 0, 0])[0] if hasattr(state, 'Position') else 0.0,
-                    getattr(state, 'Position', [0, 0, 0])[1] if hasattr(state, 'Position') else 0.0,
-                    getattr(state, 'Position', [0, 0, 0])[2] if hasattr(state, 'Position') else 0.0,
-                ],
-                "base_orientation": [1.0, 0.0, 0.0, 0.0],  # Quaternion
+                "battery_level": 0,  # Vereist subscription om te lezen
+                "base_position": [0.0, 0.0, 0.0],
+                "base_orientation": [1.0, 0.0, 0.0, 0.0],
                 "base_linear_velocity": [0.0, 0.0, 0.0],
                 "base_angular_velocity": [0.0, 0.0, 0.0],
                 "joint_positions": {},
                 "joint_velocities": {},
-                "imu_data": {}
+                "imu_data": {},
+                "note": "Gebruik RobotStateClient subscription voor volledige state"
             }
-            
-            # Probeer joint data te extraheren (afhankelijk van SDK versie)
-            if hasattr(state, 'JointState'):
-                for i, joint_state in enumerate(state.JointState):
-                    joint_name = f"joint_{i}"
-                    result["joint_positions"][joint_name] = getattr(joint_state, 'Position', 0.0)
-                    result["joint_velocities"][joint_name] = getattr(joint_state, 'Velocity', 0.0)
             
             return result
             
