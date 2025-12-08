@@ -17,9 +17,23 @@ De officiële SDK staat al in `unitree_sdk2_python/` directory.
 
 ### Stap 2: Installeer Dependencies
 
+**BELANGRIJK**: Zet eerst `CYCLONEDDS_HOME` voordat je cyclonedds installeert!
+
 ```bash
+# Export CYCLONEDDS_HOME (als nog niet gezet)
+export CYCLONEDDS_HOME="/Users/marc/cyclonedds/install"
+
+# Of gebruik het install script dat dit automatisch doet
+./install_cyclonedds_macos.sh
+
+# Installeer dependencies
 pip install cyclonedds==0.10.2 numpy opencv-python
 ```
+
+**Als je de fout krijgt "Could not locate cyclonedds"**:
+1. Zorg dat CycloneDDS eerst gecompileerd is (gebruik `./install_cyclonedds_macos.sh`)
+2. Export `CYCLONEDDS_HOME` voordat je pip install doet
+3. Of voeg toe aan `~/.zshrc` voor permanente export
 
 ### Stap 3: Installeer SDK
 
