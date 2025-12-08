@@ -504,4 +504,79 @@ class Go2VoiceController(VoiceController):
                 self.speak(f"Fout bij starten: {e}")
         else:
             self.speak("API server niet beschikbaar")
+    
+    def handle_web_search(self, text: str):
+        """Zoek op internet via voice commando"""
+        # Extract query uit tekst
+        import re
+        match = re.search(r"zoek\s+(.+)|zoek\s+op\s+internet\s+(.+)|vind\s+(.+)|google\s+(.+)", text.lower())
+        if match:
+            query = match.group(1) or match.group(2) or match.group(3) or match.group(4)
+        else:
+            # Probeer alles na "zoek" of "vind"
+            words = text.lower().split()
+            if "zoek" in words:
+                idx = words.index("zoek")
+                query = " ".join(words[idx + 1:])
+            elif "vind" in words:
+                idx = words.index("vind")
+                query = " ".join(words[idx + 1:])
+            elif "google" in words:
+                idx = words.index("google")
+                query = " ".join(words[idx + 1:])
+            else:
+                self.speak("Wat wil je zoeken?")
+                return
+        
+        if not query or len(query.strip()) == 0:
+            self.speak("Wat wil je zoeken?")
+            return
+        
+        query = query.strip()
+        print(f"🔍 Zoekopdracht: {query}")
+        
+        # Maak web searcher als niet beschikbaar
+        if not self.web_searcher:
+            try:
+                from ..unitree_go2.web_search import WebSearcher
+                self.web_searcher = WebSearcher()
+            except Exception as e:
+                self.speak(f"Kon web searcher niet initialiseren: {e}")
+                return
+        
+        # Zoek op internet
+        self.speak(f"Zoeken naar {query}")
+        try:
+            results = self.web_searcher.search(query, max_results=5)
+            
+            if not results:
+                self.speak(f"Geen resultaten gevonden voor {query}")
+                return
+            
+            # Toon op display
+            if self.display_api_url:
+                try:
+                    import requests
+                    requests.post(
+                        f"{self.display_api_url}/display/search",
+                        json={
+                            "query": query,
+                            "results": results
+                        },
+                        timeout=5
+                    )
+                    self.speak(f"Ik heb {len(results)} resultaten gevonden en getoond op het scherm")
+                except Exception as e:
+                    print(f"⚠️  Kon niet naar display sturen: {e}")
+                    # Spreek resultaten uit als fallback
+                    summary = self.web_searcher.search_and_summarize(query, max_results=3)
+                    self.speak(summary)
+            else:
+                # Geen display, spreek resultaten uit
+                summary = self.web_searcher.search_and_summarize(query, max_results=3)
+                self.speak(summary)
+                
+        except Exception as e:
+            print(f"❌ Fout bij zoeken: {e}")
+            self.speak(f"Fout bij zoeken: {e}")
 
