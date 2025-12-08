@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go2 RL Model Selector</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .model-list {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .model-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .model-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+        
+        .model-card.active {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .model-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .model-type {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+        
+        .button:hover {
+            background: #5568d3;
+            transform: scale(1.02);
+        }
+        
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .button.stop {
+            background: #e74c3c;
+        }
+        
+        .button.stop:hover {
+            background: #c0392b;
+        }
+        
+        .config-input {
+            margin-bottom: 15px;
+        }
+        
+        .config-input label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .config-input input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Go2 RL Model Selector</h1>
+        <p class="subtitle">Selecteer en activeer RL modellen voor je Go2 robot</p>
+        
+        <div id="status" class="status disconnected">
+            ⚠️ Niet verbonden met robot
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Robot Verbinding</div>
+            <div class="config-input">
+                <label>Robot IP Adres</label>
+                <input type="text" id="robot-ip" value="192.168.123.161" placeholder="192.168.123.161">
+            </div>
+            <button class="button" onclick="connectRobot()">Verbinden</button>
+            <button class="button stop" onclick="disconnectRobot()">Verbreken</button>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Beschikbare Modellen</div>
+            <button class="button" onclick="loadModels()">🔄 Ververs Modellen</button>
+            <div id="models" class="model-list">
+                <div class="loading">Laad modellen...</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Control</div>
+            <button class="button" id="start-btn" onclick="startControl()" disabled>▶️ Start RL Control</button>
+            <button class="button stop" id="stop-btn" onclick="stopControl()" disabled>⏹️ Stop Control</button>
+        </div>
+    </div>
+    
+    <script>
+        // Configuratie - PAS DIT AAN!
+        const API_BASE = 'http://192.168.1.100:5000/api';  // Vervang met jouw server IP
+        
+        let currentModel = null;
+        let isRunning = false;
+        
+        // Update status
+        async function updateStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/robot/status`);
+                const data = await response.json();
+                
+                const statusDiv = document.getElementById('status');
+                if (data.robot.connected) {
+                    statusDiv.className = 'status connected';
+                    statusDiv.textContent = `✓ Verbonden met robot | Model: ${data.robot.current_model || 'Geen'} | Running: ${data.robot.is_running ? 'Ja' : 'Nee'}`;
+                } else {
+                    statusDiv.className = 'status disconnected';
+                    statusDiv.textContent = '⚠️ Niet verbonden met robot';
+                }
+                
+                document.getElementById('start-btn').disabled = !data.robot.connected || !data.robot.current_model || data.robot.is_running;
+                document.getElementById('stop-btn').disabled = !data.robot.is_running;
+                
+                currentModel = data.robot.current_model;
+                isRunning = data.robot.is_running;
+            } catch (e) {
+                console.error('Status update fout:', e);
+            }
+        }
+        
+        // Laad modellen
+        async function loadModels() {
+            try {
+                const response = await fetch(`${API_BASE}/models`);
+                const data = await response.json();
+                
+                const modelsDiv = document.getElementById('models');
+                modelsDiv.innerHTML = '';
+                
+                if (data.models.length === 0) {
+                    modelsDiv.innerHTML = '<div class="loading">Geen modellen gevonden</div>';
+                    return;
+                }
+                
+                data.models.forEach(model => {
+                    const card = document.createElement('div');
+                    card.className = 'model-card';
+                    if (model.name === currentModel) {
+                        card.classList.add('active');
+                    }
+                    
+                    card.innerHTML = `
+                        <div class="model-name">${model.name}</div>
+                        <div class="model-type">${model.type}</div>
+                    `;
+                    
+                    card.onclick = () => activateModel(model.name);
+                    modelsDiv.appendChild(card);
+                });
+            } catch (e) {
+                console.error('Fout bij laden modellen:', e);
+                document.getElementById('models').innerHTML = '<div class="loading">Fout bij laden modellen</div>';
+            }
+        }
+        
+        // Activeer model
+        async function activateModel(modelName) {
+            try {
+                // Laad model
+                await fetch(`${API_BASE}/models/${modelName}/load`, {
+                    method: 'POST'
+                });
+                
+                // Activeer model
+                await fetch(`${API_BASE}/models/${modelName}/activate`, {
+                    method: 'POST'
+                });
+                
+                currentModel = modelName;
+                await loadModels(); // Refresh om active state te updaten
+                await updateStatus();
+                
+                alert(`✓ Model "${modelName}" geactiveerd!`);
+            } catch (e) {
+                alert(`Fout bij activeren model: ${e.message}`);
+            }
+        }
+        
+        // Connect robot
+        async function connectRobot() {
+            const ip = document.getElementById('robot-ip').value;
+            try {
+                const response = await fetch(`${API_BASE}/robot/connect`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ip_address: ip})
+                });
+                
+                const data = await response.json();
+                if (data.status === 'ok') {
+                    await updateStatus();
+                    await loadModels();
+                    alert('✓ Verbonden met robot!');
+                } else {
+                    alert(`Fout: ${data.message}`);
+                }
+            } catch (e) {
+                alert(`Fout bij verbinden: ${e.message}`);
+            }
+        }
+        
+        // Disconnect robot
+        async function disconnectRobot() {
+            try {
+                await fetch(`${API_BASE}/robot/disconnect`, {method: 'POST'});
+                await updateStatus();
+                alert('✓ Verbinding verbroken');
+            } catch (e) {
+                alert(`Fout: ${e.message}`);
+            }
+        }
+        
+        // Start control
+        async function startControl() {
+            try {
+                const response = await fetch(`${API_BASE}/control/start`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                if (data.status === 'ok') {
+                    await updateStatus();
+                    alert('✓ RL control gestart!');
+                } else {
+                    alert(`Fout: ${data.message}`);
+                }
+            } catch (e) {
+                alert(`Fout: ${e.message}`);
+            }
+        }
+        
+        // Stop control
+        async function stopControl() {
+            try {
+                await fetch(`${API_BASE}/control/stop`, {
+                    method: 'POST'
+                });
+                
+                await updateStatus();
+                alert('✓ RL control gestopt');
+            } catch (e) {
+                alert(`Fout: ${e.message}`);
+            }
+        }
+        
+        // Initialiseer
+        loadModels();
+        updateStatus();
+        setInterval(updateStatus, 2000); // Update elke 2 seconden
+    </script>
+</body>
+</html>
+
