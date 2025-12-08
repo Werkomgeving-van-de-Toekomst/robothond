@@ -1,0 +1,35 @@
+# Search Flow voor Go2 Robot
+# Zoek iets op internet en toon resultaten op display
+
+name: "Internet Zoeken Flow"
+description: "Zoek iets op internet en toon resultaten op gekoppelde PC"
+
+actions:
+  - name: "Sta op"
+    type: stand
+    duration: 2.0
+    
+  - name: "Zoek op internet"
+    type: web_search
+    params:
+      query: "Unitree Go2 robot"  # Pas aan naar gewenste zoekterm
+      max_results: 5
+      speak_results: true  # Spreek resultaten uit
+      show_on_display: true  # Toon op display
+    
+  - name: "Wacht"
+    type: wait
+    duration: 3.0
+    
+  - name: "Toon bericht op display"
+    type: display
+    params:
+      title: "Zoekopdracht voltooid"
+      content: "De zoekresultaten zijn getoond op het scherm!"
+      display_type: text
+    
+  - name: "Spreek bevestiging"
+    type: voice_speak
+    params:
+      text: "Ik heb de zoekresultaten gevonden en getoond op het scherm."
+

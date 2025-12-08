@@ -28,6 +28,8 @@ class ActionType(Enum):
     WAIT = "wait"
     SPEAK = "speak"
     VOICE_SPEAK = "voice_speak"  # Via voice controller
+    WEB_SEARCH = "web_search"  # Zoek op internet
+    DISPLAY = "display"  # Toon op display
     CONDITION = "condition"  # Conditionele actie
     LOOP = "loop"  # Herhaal acties
     PARALLEL = "parallel"  # Voer acties parallel uit
@@ -174,6 +176,41 @@ class FlowExecutor:
                     self.voice_controller.speak(text)
                 else:
                     print(f"⚠️  Voice controller niet beschikbaar: {text}")
+                    
+            elif action.type == ActionType.WEB_SEARCH:
+                query = action.params.get("query", "")
+                max_results = action.params.get("max_results", 5)
+                
+                if not self.web_searcher:
+                    print(f"⚠️  Web searcher niet beschikbaar")
+                    # Maak een nieuwe searcher
+                    from .web_search import WebSearcher
+                    self.web_searcher = WebSearcher()
+                
+                print(f"🔍 Zoeken op internet: {query}")
+                results = self.web_searcher.search(query, max_results)
+                
+                # Spreek resultaten uit (optioneel)
+                if action.params.get("speak_results", False) and self.voice_controller:
+                    summary = self.web_searcher.search_and_summarize(query, max_results=3)
+                    self.voice_controller.speak(summary)
+                
+                # Toon op display (optioneel)
+                if action.params.get("show_on_display", True) and self.display_api_url:
+                    self._update_display_search(query, results)
+                
+                # Sla resultaten op voor gebruik in volgende acties
+                action.params["_search_results"] = results
+                
+            elif action.type == ActionType.DISPLAY:
+                content = action.params.get("content", "")
+                title = action.params.get("title", "Go2 Robot Display")
+                display_type = action.params.get("display_type", "text")
+                
+                if self.display_api_url:
+                    self._update_display(title, content, display_type)
+                else:
+                    print(f"⚠️  Display API niet beschikbaar: {content}")
                     
             elif action.type == ActionType.CONDITION:
                 # Conditionele actie
