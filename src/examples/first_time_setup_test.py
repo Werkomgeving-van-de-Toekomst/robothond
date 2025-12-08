@@ -64,11 +64,46 @@ def test_imports():
     
     return all(results)
 
+def test_python_version():
+    """Test Python versie (moet 3.8-3.12 zijn voor cyclonedds)"""
+    print_section("Test Python Versie")
+    
+    results = []
+    
+    python_version = sys.version_info
+    version_str = f"{python_version.major}.{python_version.minor}.{python_version.micro}"
+    
+    # Check versie
+    if python_version.major == 3 and 8 <= python_version.minor <= 12:
+        results.append(check_mark(True, f"Python versie OK: {version_str}"))
+    elif python_version.major == 3 and python_version.minor == 14:
+        results.append(check_mark(False, f"Python versie {version_str} niet compatibel met cyclonedds"))
+        print("  ⚠️  Python 3.14 heeft compatibiliteitsproblemen met cyclonedds 0.10.2")
+        print("  💡 Tip: Gebruik Python 3.12 of 3.11")
+        print("     python3.12 -m venv venv")
+        print("     source venv/bin/activate")
+    else:
+        results.append(check_mark(False, f"Python versie {version_str} mogelijk niet compatibel"))
+        print("  💡 Tip: Gebruik Python 3.8-3.12 voor beste compatibiliteit")
+    
+    return all(results)
+
 def test_cyclonedds():
     """Test CycloneDDS installatie"""
     print_section("Test CycloneDDS")
     
     results = []
+    
+    # Check Python versie eerst
+    python_version = sys.version_info
+    if python_version.major == 3 and python_version.minor == 14:
+        results.append(check_mark(False, "Python 3.14 niet compatibel met cyclonedds"))
+        print("  ⚠️  cyclonedds 0.10.2 werkt niet met Python 3.14")
+        print("  💡 Oplossing: Gebruik Python 3.12")
+        print("     1. Maak nieuwe venv: python3.12 -m venv venv")
+        print("     2. Activeer: source venv/bin/activate")
+        print("     3. Installeer: pip install cyclonedds==0.10.2")
+        return False
     
     # Check CYCLONEDDS_HOME
     cyclonedds_home = os.getenv("CYCLONEDDS_HOME")
@@ -91,6 +126,8 @@ def test_cyclonedds():
     except ImportError:
         results.append(check_mark(False, "cyclonedds Python package niet geïnstalleerd"))
         print("  💡 Tip: pip install cyclonedds==0.10.2 (na CYCLONEDDS_HOME te zetten)")
+        if python_version.major == 3 and python_version.minor == 14:
+            print("  ⚠️  Maar eerst: gebruik Python 3.12!")
     
     return all(results)
 
@@ -254,16 +291,19 @@ def main():
     print("\nDit script test of alles correct is geïnstalleerd en geconfigureerd.")
     print("Gebruik dit script wanneer je de robot voor het eerst aanzet.\n")
     
-    # Test 1: Imports
+    # Test 1: Python versie
+    python_ok = test_python_version()
+    
+    # Test 2: Imports
     imports_ok = test_imports()
     
-    # Test 2: CycloneDDS
+    # Test 3: CycloneDDS
     cyclonedds_ok = test_cyclonedds()
     
-    # Test 3: Netwerk verbinding
+    # Test 4: Netwerk verbinding
     network_ok = test_network_connection(args.ip)
     
-    # Test 4: Custom wrapper (als netwerk OK)
+    # Test 5: Custom wrapper (als netwerk OK)
     custom_wrapper_ok = False
     if network_ok and not args.skip_robot:
         print("\n⚠️  Let op: Robot tests zullen commando's naar de robot sturen!")
@@ -279,7 +319,7 @@ def main():
     elif args.skip_robot:
         print("\n  ⏭️  Robot tests overgeslagen (--skip-robot flag)")
     
-    # Test 5: Officiële SDK (als CycloneDDS OK en netwerk OK)
+    # Test 6: Officiële SDK (als CycloneDDS OK en netwerk OK)
     official_sdk_ok = False
     if cyclonedds_ok and network_ok and not args.skip_robot:
         try:
@@ -297,6 +337,7 @@ def main():
     print_header("Test Samenvatting")
     
     print("\n📋 Resultaten:")
+    print(f"  {'✓' if python_ok else '❌'} Python Versie: {'OK' if python_ok else 'FAAL'}")
     print(f"  {'✓' if imports_ok else '❌'} Imports: {'OK' if imports_ok else 'FAAL'}")
     print(f"  {'✓' if cyclonedds_ok else '❌'} CycloneDDS: {'OK' if cyclonedds_ok else 'FAAL'}")
     print(f"  {'✓' if network_ok else '❌'} Netwerk: {'OK' if network_ok else 'FAAL'}")
@@ -307,13 +348,28 @@ def main():
     # Aanbevelingen
     print("\n💡 Aanbevelingen:")
     
+    python_version = sys.version_info
+    
+    if not python_ok:
+        print("  - Python versie probleem gedetecteerd")
+        print("  - Gebruik Python 3.12 voor beste compatibiliteit:")
+        print("    python3.12 -m venv venv")
+        print("    source venv/bin/activate")
+        print("    pip install -r requirements.txt")
+        print("    Of gebruik: ./setup_venv_python312.sh")
+    
     if not imports_ok:
         print("  - Check of alle dependencies geïnstalleerd zijn")
         print("  - Run: pip install -r requirements.txt")
     
     if not cyclonedds_ok:
-        print("  - Installeer CycloneDDS: ./install_cyclonedds_macos.sh")
-        print("  - Of export CYCLONEDDS_HOME handmatig")
+        if python_version.major == 3 and python_version.minor == 14:
+            print("  - ⚠️  Python 3.14 niet compatibel met cyclonedds!")
+            print("  - Gebruik eerst Python 3.12 (zie boven)")
+            print("  - Of gebruik: ./setup_venv_python312.sh")
+        else:
+            print("  - Installeer CycloneDDS: ./install_cyclonedds_macos.sh")
+            print("  - Of export CYCLONEDDS_HOME handmatig")
     
     if not network_ok:
         print("  - Check of robot aan is")
@@ -332,7 +388,7 @@ def main():
         print("  - Check DDS communicatie")
     
     # Eindresultaat
-    all_tests = [imports_ok, cyclonedds_ok, network_ok]
+    all_tests = [python_ok, imports_ok, cyclonedds_ok, network_ok]
     if not args.skip_robot:
         all_tests.extend([custom_wrapper_ok, official_sdk_ok])
     

@@ -11,13 +11,31 @@ We ondersteunen nu twee opties:
 
 ## Installatie Officiële SDK
 
+### ⚠️ Belangrijk: Python Versie
+
+**CycloneDDS werkt niet met Python 3.14!** Gebruik Python 3.12 of 3.11.
+
+```bash
+# Check Python versie
+python --version
+
+# Als je Python 3.14 hebt, maak nieuwe venv met Python 3.12:
+python3.12 -m venv venv
+source venv/bin/activate
+
+# Of gebruik het setup script:
+./setup_venv_python312.sh
+```
+
 ### Stap 1: Clone Repository
 
 De officiële SDK staat al in `unitree_sdk2_python/` directory.
 
 ### Stap 2: Installeer Dependencies
 
-**BELANGRIJK**: Zet eerst `CYCLONEDDS_HOME` voordat je cyclonedds installeert!
+**BELANGRIJK**: 
+1. Gebruik Python 3.12 of 3.11 (niet 3.14!)
+2. Zet eerst `CYCLONEDDS_HOME` voordat je cyclonedds installeert!
 
 ```bash
 # Export CYCLONEDDS_HOME (als nog niet gezet)
