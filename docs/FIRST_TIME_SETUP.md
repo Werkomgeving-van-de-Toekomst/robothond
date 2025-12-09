@@ -158,9 +158,10 @@ export CYCLONEDDS_HOME="/Users/marc/cyclonedds/install"
    - Is robot aan?
    - Zie je LED indicatoren?
 
-2. **Check WiFi verbinding**:
+2. **Check netwerk verbinding**:
    - Is robot verbonden met WiFi?
-   - Zie [WiFi Verbinding Guide](./WIFI_VERBINDING.md) voor complete instructies
+   - Zie [WiFi Verbinding Guide](./WIFI_VERBINDING.md) voor WiFi instructies
+   - Of gebruik Ethernet: Zie [Ethernet Verbinding Guide](./ETHERNET_VERBINDING.md) voor directe verbinding
 
 3. **Check IP adres**:
    ```bash
