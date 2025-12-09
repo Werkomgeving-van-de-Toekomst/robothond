@@ -8,9 +8,34 @@ Complete guide voor het verbinden van de Go2 robot via Ethernet kabel direct naa
 
 Als je op macOS werkt, volg deze snelle stappen:
 
+### Methode 1: Via Terminal (Snelste)
+
+1. **Sluit Ethernet kabel aan** op robot en computer (of USB naar Ethernet adapter)
+2. **Vind beschikbare Ethernet interface**:
+   ```bash
+   ifconfig | grep "^en"
+   # Of:
+   networksetup -listallhardwareports | grep -A 1 "Ethernet"
+   ```
+3. **Configureer interface** (vervang `en5` met jouw interface):
+   ```bash
+   sudo ifconfig en5 192.168.123.222 netmask 255.255.255.0 up
+   ```
+4. **Test verbinding**:
+   ```bash
+   ping 192.168.123.161
+   ```
+5. **Gebruik netwerkkaart naam** bij SDK (bijvoorbeeld `en5`):
+   ```bash
+   python unitree_sdk2_python/example/go2/high_level/go2_sport_client.py en5
+   ```
+
+### Methode 2: Via System Preferences (GUI)
+
 1. **Sluit Ethernet kabel aan** op robot en computer (of USB naar Ethernet adapter)
 2. **Open System Preferences** → **Network**
 3. **Selecteer "USB 10/100/1000 LAN"** of je Ethernet interface
+   - Als je geen Ethernet interface ziet, gebruik Terminal methode (Methode 1)
 4. **Configureer IPv4**: Kies **"Manually"**
    - IP Address: `192.168.123.222`
    - Subnet Mask: `255.255.255.0`
@@ -20,15 +45,22 @@ Als je op macOS werkt, volg deze snelle stappen:
    ```bash
    ifconfig | grep -B 1 "192.168.123"
    ```
-   Noteer de naam (bijvoorbeeld: `enxf8e43b808e06`)
+   Noteer de naam (bijvoorbeeld: `en5` of `enxf8e43b808e06`)
 7. **Test verbinding**:
    ```bash
    ping 192.168.123.161
    ```
 8. **Gebruik netwerkkaart naam** bij SDK:
    ```bash
-   python unitree_sdk2_python/example/go2/high_level/go2_sport_client.py enxf8e43b808e06
+   python unitree_sdk2_python/example/go2/high_level/go2_sport_client.py en5
    ```
+
+### Gebruik Configuratie Script
+
+Er is een helper script beschikbaar:
+```bash
+./configure_ethernet_macos.sh en5
+```
 
 Zie hieronder voor gedetailleerde instructies en troubleshooting.
 
@@ -432,19 +464,50 @@ python src/examples/diagnostics.py -i 192.168.123.161
 
 ### Probleem 1: Computer Ziet Ethernet Interface Niet
 
+**Symptomen**:
+- Geen "USB 10/100/1000 LAN" of "Ethernet" in `networksetup -listallnetworkservices`
+- Interface verschijnt niet in System Preferences → Network
+
 **Oplossingen**:
 
 1. **Check USB adapter**:
    - Zorg dat USB naar Ethernet adapter correct aangesloten is
    - Probeer andere USB poort
    - Check of adapter werkt (test op andere computer)
+   - Wacht 10-30 seconden na aansluiten (macOS heeft tijd nodig om adapter te herkennen)
 
-2. **Installeer drivers**:
-   - macOS: Meestal automatisch, check System Preferences → Network
-   - Linux: Meestal automatisch, check `dmesg | grep -i usb`
-   - Windows: Installeer drivers van adapter fabrikant
+2. **Check of adapter wordt herkend**:
+   ```bash
+   # macOS: Check USB apparaten
+   system_profiler SPUSBDataType | grep -i "ethernet\|network\|lan"
+   
+   # Of check alle interfaces
+   ifconfig | grep "^en"
+   ```
 
-3. **Check interface status**:
+3. **Activeer interface handmatig** (als interface bestaat maar niet actief is):
+   ```bash
+   # Vind interface naam eerst
+   ifconfig | grep "^en"
+   
+   # Activeer interface (vervang "en5" met jouw interface)
+   sudo ifconfig en5 up
+   
+   # Of via networksetup (als service bestaat maar uitgeschakeld is)
+   sudo networksetup -setnetworkserviceenabled "USB 10/100/1000 LAN" on
+   ```
+
+4. **Installeer drivers** (indien nodig):
+   - macOS: Meestal automatisch, maar sommige adapters vereisen drivers
+   - Check adapter fabrikant website voor macOS drivers
+   - Populaire adapters: ASIX, Realtek, Apple USB-C naar Ethernet adapter
+
+5. **Gebruik bestaande interface** (als USB adapter niet werkt):
+   - Als je een MacBook met Thunderbolt hebt, gebruik Thunderbolt Bridge
+   - Of gebruik een van de beschikbare `en` interfaces (en4, en5, en6)
+   - Configureer deze interface met IP `192.168.123.222`
+
+6. **Check interface status**:
    ```bash
    # macOS/Linux
    ifconfig
