@@ -158,16 +158,20 @@ export CYCLONEDDS_HOME="/Users/marc/cyclonedds/install"
    - Is robot aan?
    - Zie je LED indicatoren?
 
-2. **Check IP adres**:
+2. **Check WiFi verbinding**:
+   - Is robot verbonden met WiFi?
+   - Zie [WiFi Verbinding Guide](./WIFI_VERBINDING.md) voor complete instructies
+
+3. **Check IP adres**:
    ```bash
    ping 192.168.123.161
    ```
 
-3. **Check netwerk**:
+4. **Check netwerk**:
    - Zit je op hetzelfde netwerk?
    - Check WiFi/Ethernet verbinding
 
-4. **Check firewall**:
+5. **Check firewall**:
    - Staat poort 8080 open?
    - Test met: `telnet 192.168.123.161 8080`
    - Zie [Firewall Troubleshooting](./FIREWALL_TROUBLESHOOTING.md) voor gedetailleerde instructies
