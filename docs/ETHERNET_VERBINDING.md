@@ -2,6 +2,8 @@
 
 Complete guide voor het verbinden van de Go2 robot via Ethernet kabel direct naar je computer.
 
+**Gebaseerd op officiële Unitree Go2 SDK instructies.**
+
 ## Overzicht
 
 De Go2 robot kan via een Ethernet kabel direct verbonden worden met je computer. Dit is handig wanneer:
