@@ -9,6 +9,7 @@ De Jetson AGX Orin biedt extra rekenkracht voor:
 - **Lage latency** door lokale processing
 - **Betere accuratesse** met medium/large Whisper modellen
 - **Onboard audio processing** zonder externe services
+- **Volledige Nederlandse ondersteuning** voor spraakcommando's
 
 ## Architectuur
 
@@ -89,6 +90,8 @@ python3 -c "import whisper; whisper.load_model('base')"
 
 **Voor Jetson AGX Orin**: Gebruik `medium` of `large` voor beste resultaten.
 
+**Nederlandse ondersteuning**: Alle Whisper modellen ondersteunen Nederlands uitstekend. De Jetson kan grote modellen draaien voor optimale Nederlandse spraakherkenning.
+
 ## Configuratie
 
 ### Netwerk Setup
@@ -105,24 +108,37 @@ ip link show  # Meestal eth0
 
 ### Start Voice Server
 
-#### Basis Configuratie
+#### Basis Configuratie (Nederlands)
 
 ```bash
 python3 src/voice/jetson_voice_server.py \
     --robot-ip 192.168.123.161 \
     --network-interface eth0 \
     --port 8888 \
-    --whisper-model base
+    --whisper-model base \
+    --language nl-NL  # Nederlands
 ```
 
-#### Met Groot Model (Betere Kwaliteit)
+#### Met Groot Model (Beste Nederlandse Kwaliteit)
 
 ```bash
 python3 src/voice/jetson_voice_server.py \
     --robot-ip 192.168.123.161 \
     --network-interface eth0 \
     --port 8888 \
-    --whisper-model medium  # Of 'large' voor beste kwaliteit
+    --whisper-model medium \
+    --language nl-NL  # Nederlands (aanbevolen voor beste kwaliteit)
+```
+
+#### Met Large Model (Beste Kwaliteit)
+
+```bash
+python3 src/voice/jetson_voice_server.py \
+    --robot-ip 192.168.123.161 \
+    --network-interface eth0 \
+    --port 8888 \
+    --whisper-model large \
+    --language nl-NL  # Nederlands
 ```
 
 #### Zonder Robot Verbinding (Alleen Voice Processing)
@@ -131,7 +147,8 @@ python3 src/voice/jetson_voice_server.py \
 python3 src/voice/jetson_voice_server.py \
     --no-robot \
     --port 8888 \
-    --whisper-model medium
+    --whisper-model medium \
+    --language nl-NL  # Nederlands
 ```
 
 ## API Endpoints
@@ -152,9 +169,10 @@ Response:
 }
 ```
 
-### Stuur Tekst Commando
+### Stuur Tekst Commando (Nederlands)
 
 ```bash
+# Nederlandse commando's worden volledig ondersteund
 curl -X POST http://192.168.1.100:8888/api/voice/listen \
   -H "Content-Type: application/json" \
   -d '{"text": "sta op"}'
@@ -169,6 +187,13 @@ Response:
   "response": "Robot staat rechtop"
 }
 ```
+
+**Nederlandse commando voorbeelden**:
+- `"sta op"` of `"sta rechtop"` - Robot staat rechtop
+- `"ga zitten"` of `"zit"` - Robot gaat zitten
+- `"stop"` of `"stoppen"` - Stop beweging
+- `"zoek [term]"` of `"vind [term]"` - Zoek op internet
+- `"help"` of `"hulp"` - Toon commando's
 
 ### Start Continue Luisteren
 
@@ -201,7 +226,7 @@ curl -X POST http://192.168.1.100:8888/api/robot/command \
 ### Vanaf Jetson (Lokaal)
 
 ```bash
-# Stuur commando
+# Stuur Nederlands commando
 python3 src/voice/jetson_voice_client.py \
     --jetson-url http://localhost:8888 \
     --command "sta op"
@@ -221,9 +246,19 @@ python3 src/voice/jetson_voice_client.py \
 
 ```bash
 # Vervang localhost met Jetson IP
+# Nederlandse commando's worden volledig ondersteund
 python3 src/voice/jetson_voice_client.py \
     --jetson-url http://192.168.1.100:8888 \
     --command "ga zitten"
+
+# Andere Nederlandse commando's
+python3 src/voice/jetson_voice_client.py \
+    --jetson-url http://192.168.1.100:8888 \
+    --command "zoek unitree go2"
+
+python3 src/voice/jetson_voice_client.py \
+    --jetson-url http://192.168.1.100:8888 \
+    --command "stop"
 ```
 
 ## Beschikbare Commando's
@@ -449,8 +484,10 @@ python3 src/voice/jetson_voice_client.py \
 
 ## Referenties
 
+- [Nederlandse Voice Control](./NEDERLANDSE_VOICE_CONTROL.md) - Complete guide voor Nederlandse commando's
 - [Jetson AGX Orin Verbinding](./JETSON_AGX_ORIN_VERBINDING.md)
 - [Voice Control Guide](./VOICE_CONTROL.md)
+- [Voice op Robot](./VOICE_OP_ROBOT.md)
 - [OpenAI Whisper GitHub](https://github.com/openai/whisper)
 - [NVIDIA Jetson Developer Guide](https://developer.nvidia.com/embedded/jetson-agx-orin)
 
