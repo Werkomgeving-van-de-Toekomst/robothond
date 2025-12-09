@@ -61,6 +61,24 @@ De Jetson AGX Orin is een krachtige edge computing device die ideaal is voor:
 
 ## Stap 2: Netwerk Configuratie op Jetson
 
+### Quick Start: Gebruik Configuratie Script
+
+Er is een helper script beschikbaar voor snelle configuratie:
+
+```bash
+# Voor directe Ethernet verbinding
+sudo ./configure_ethernet_jetson.sh eth0 direct
+
+# Voor router verbinding (DHCP)
+sudo ./configure_ethernet_jetson.sh eth0 router
+```
+
+Het script:
+- Detecteert automatisch beschikbare interfaces
+- Maakt netplan configuratie aan
+- Test verbinding met robot
+- Geeft instructies voor SDK gebruik
+
 ### Methode 1: Via netplan (Ubuntu 20.04/22.04 - Aanbevolen)
 
 #### Directe Ethernet Verbinding
