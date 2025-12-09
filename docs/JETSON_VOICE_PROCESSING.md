@@ -528,8 +528,20 @@ python3 src/voice/jetson_voice_client.py \
 - `src/voice/jetson_voice_client.py` - Client voor commando's
 - `src/voice/voice_controller.py` - Basis voice controller
 
+## Multi-Jetson Setup
+
+Voor betere performance en fault tolerance kun je meerdere Jetsons parallel gebruiken:
+
+- **Load Balancing**: Verdeel workload over meerdere Jetsons
+- **Redundancy**: Als één Jetson faalt, blijft systeem werken
+- **Schaalbaarheid**: Ondersteun meerdere robots of complexere processing
+- **Specialisatie**: Verschillende Jetsons voor verschillende taken
+
+Zie [Multi-Jetson Setup](./MULTI_JETSON_SETUP.md) voor complete documentatie.
+
 ## Referenties
 
+- [Multi-Jetson Setup](./MULTI_JETSON_SETUP.md) - Meerdere Jetsons parallel gebruiken
 - [Nederlandse Voice Control](./NEDERLANDSE_VOICE_CONTROL.md) - Complete guide voor Nederlandse commando's
 - [Jetson AGX Orin Verbinding](./JETSON_AGX_ORIN_VERBINDING.md)
 - [Voice Control Guide](./VOICE_CONTROL.md)
