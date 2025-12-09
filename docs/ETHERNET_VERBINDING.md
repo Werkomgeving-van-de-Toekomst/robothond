@@ -4,6 +4,34 @@ Complete guide voor het verbinden van de Go2 robot via Ethernet kabel direct naa
 
 **Gebaseerd op officiële Unitree Go2 SDK instructies.**
 
+## Quick Start voor macOS
+
+Als je op macOS werkt, volg deze snelle stappen:
+
+1. **Sluit Ethernet kabel aan** op robot en computer (of USB naar Ethernet adapter)
+2. **Open System Preferences** → **Network**
+3. **Selecteer "USB 10/100/1000 LAN"** of je Ethernet interface
+4. **Configureer IPv4**: Kies **"Manually"**
+   - IP Address: `192.168.123.222`
+   - Subnet Mask: `255.255.255.0`
+   - Router: Laat leeg
+5. **Klik "Apply"**
+6. **Vind netwerkkaart naam**:
+   ```bash
+   ifconfig | grep -B 1 "192.168.123"
+   ```
+   Noteer de naam (bijvoorbeeld: `enxf8e43b808e06`)
+7. **Test verbinding**:
+   ```bash
+   ping 192.168.123.161
+   ```
+8. **Gebruik netwerkkaart naam** bij SDK:
+   ```bash
+   python unitree_sdk2_python/example/go2/high_level/go2_sport_client.py enxf8e43b808e06
+   ```
+
+Zie hieronder voor gedetailleerde instructies en troubleshooting.
+
 ## Overzicht
 
 De Go2 robot kan via een Ethernet kabel direct verbonden worden met je computer. Dit is handig wanneer:
@@ -62,36 +90,61 @@ De Go2 robot kan via een Ethernet kabel direct verbonden worden met je computer.
 
 #### Methode 2: Via Terminal (Command Line)
 
+**Option A: Via networksetup (aanbevolen voor macOS)**
+
 ```bash
-# Vind netwerk interface naam
+# Vind netwerk interface naam (service naam)
 networksetup -listallnetworkservices
 
-# Configureer USB Ethernet (vervang "USB 10/100/1000 LAN" met jouw interface naam)
+# Output voorbeeld:
+# * = een netwerk service is uitgeschakeld
+# An asterisk (*) denotes that a network service is disabled.
+# USB 10/100/1000 LAN
+# Wi-Fi
+# Bluetooth PAN
+
+# Configureer USB Ethernet (vervang "USB 10/100/1000 LAN" met jouw service naam)
 sudo networksetup -setmanual "USB 10/100/1000 LAN" 192.168.123.222 255.255.255.0
 
-# Of als interface "en5" heet (check met ifconfig)
+# Check configuratie
+networksetup -getinfo "USB 10/100/1000 LAN"
+```
+
+**Option B: Via ifconfig (directe configuratie)**
+
+```bash
+# Vind interface naam eerst
+ifconfig
+
+# Zoek naar interface met IP 192.168.123.x (na configuratie)
+# Of zoek naar USB Ethernet adapter (meestal begint met "en" gevolgd door nummer of MAC)
+
+# Configureer (vervang "en5" met jouw interface naam)
 sudo ifconfig en5 192.168.123.222 netmask 255.255.255.0 up
+
+# Check configuratie
+ifconfig en5
 ```
 
 **Vind Interface Naam voor 123 Subnet**:
 ```bash
-# Toon alle netwerk interfaces
-ifconfig
-
-# Zoek naar interface met IP 192.168.123.x
-# Bijvoorbeeld:
-# enxf8e43b808e06: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
-#         inet 192.168.123.222 netmask 0xffffff00 broadcast 192.168.123.255
-# In dit geval is de interface naam: enxf8e43b808e06
-
-# Of gebruik grep om alleen 123 subnet te tonen:
+# Na configuratie: zoek interface met IP 192.168.123.x
 ifconfig | grep -B 1 "192.168.123"
 
-# Of gebruik:
+# Voorbeeld output:
+# enxf8e43b808e06: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
+#         inet 192.168.123.222 netmask 0xffffff00 broadcast 192.168.123.255
+# 
+# In dit geval is de interface naam: enxf8e43b808e06
+
+# Of gebruik networksetup om hardware poorten te zien
 networksetup -listallhardwareports
 ```
 
-**Belangrijk**: Noteer de interface naam die correspondeert met het 192.168.123 subnet. Deze naam heb je nodig als parameter bij het runnen van voorbeelden met de officiële SDK!
+**Belangrijk voor macOS**: 
+- Noteer de interface naam (bijvoorbeeld `enxf8e43b808e06` of `en5`)
+- Deze naam heb je nodig als parameter bij het runnen van voorbeelden met de officiële SDK
+- Interface namen op macOS beginnen meestal met `en` gevolgd door een nummer of MAC adres
 
 ### Linux: USB Ethernet Configuratie
 
@@ -611,25 +664,48 @@ PC 2 ───┘
 
 ## Samenvatting
 
-**Snelle Setup**:
+### Snelle Setup (macOS)
 
-1. **Sluit Ethernet kabel aan** op robot en computer
-2. **Configureer computer IP**: `192.168.123.222/24` (handmatig, "222" kan gewijzigd worden)
-3. **Robot IP**: `192.168.123.161` (standaard)
-4. **Vind netwerkkaart naam**: `ifconfig | grep -B 1 "192.168.123"` (noteer de naam!)
-5. **Test verbinding**: `ping 192.168.123.161`
-6. **Test SDK**: `python src/examples/diagnostics.py -i 192.168.123.161`
-7. **Gebruik netwerkkaart naam** bij officiële SDK voorbeelden
+1. **Sluit Ethernet kabel aan** op robot en computer (of USB naar Ethernet adapter)
+2. **Open System Preferences** → **Network**
+3. **Selecteer "USB 10/100/1000 LAN"** of "Ethernet"
+4. **Configureer IPv4**: Kies "Manually"
+   - IP Address: `192.168.123.222`
+   - Subnet Mask: `255.255.255.0`
+   - Router: Leeg
+5. **Klik "Apply"**
+6. **Vind netwerkkaart naam**:
+   ```bash
+   ifconfig | grep -B 1 "192.168.123"
+   ```
+   Noteer de naam (bijvoorbeeld: `enxf8e43b808e06`)
+7. **Test verbinding**:
+   ```bash
+   ping 192.168.123.161
+   ```
+8. **Test SDK**:
+   ```bash
+   python src/examples/diagnostics.py -i 192.168.123.161
+   ```
+9. **Gebruik netwerkkaart naam** bij officiële SDK:
+   ```bash
+   python unitree_sdk2_python/example/go2/high_level/go2_sport_client.py enxf8e43b808e06
+   ```
 
-**Belangrijk**: 
-- Noteer de netwerkkaart naam die correspondeert met het 192.168.123 subnet
-- Deze naam is nodig als parameter bij het runnen van officiële SDK voorbeelden
-- Bijvoorbeeld: `python example.py enxf8e43b808e06` (vervang met jouw naam)
+### Belangrijk voor macOS
+
+- **Netwerkkaart naam**: Noteer de interface naam die correspondeert met `192.168.123.222`
+- **Interface namen**: Kunnen variëren (`en0`, `en5`, `enxf8e43b808e06`, etc.)
+- **USB adapters**: Krijgen vaak naam met MAC adres
+- **Gebruik altijd**: De interface naam die je vindt met `ifconfig | grep -B 1 "192.168.123"`
+
+### Troubleshooting
 
 **Als het niet werkt**:
-- Check IP configuratie (beide in zelfde subnet)
-- Check interface status (moet "up" zijn)
-- Test kabel (probeer andere kabel)
-- Check firewall (poort 8080 UDP)
-- Check of je de juiste netwerkkaart naam gebruikt
+- ✅ Check IP configuratie (beide in zelfde subnet: `192.168.123.0/24`)
+- ✅ Check interface status in System Preferences (moet "Connected" zijn)
+- ✅ Test kabel (probeer andere kabel)
+- ✅ Check firewall (poort 8080 UDP moet open zijn)
+- ✅ Check of je de juiste netwerkkaart naam gebruikt (moet corresponderen met 192.168.123 subnet)
+- ✅ Herstart Network service: `sudo ifconfig en5 down && sudo ifconfig en5 up` (vervang `en5` met jouw interface)
 
