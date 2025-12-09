@@ -384,6 +384,7 @@ Als niets werkt:
 
 ## Referenties
 
+- [Ethernet Verbinding Guide](./ETHERNET_VERBINDING.md) - Directe Ethernet verbinding
 - [Go2 Handleiding](./GO2_HANDLEIDING.md)
 - [First Time Setup](./FIRST_TIME_SETUP.md)
 - [Firewall Troubleshooting](./FIREWALL_TROUBLESHOOTING.md)
@@ -404,4 +405,5 @@ Als niets werkt:
 - Reset robot WiFi
 - Check router instellingen
 - Probeer dichter bij router te staan
+
 

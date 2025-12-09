@@ -72,3 +72,4 @@ echo "Test de setup:"
 echo "  python src/examples/first_time_setup_test.py --skip-robot"
 echo ""
 
+
