@@ -53,7 +53,7 @@ De Go2 robot kan via een Ethernet kabel direct verbonden worden met je computer.
    - Klik op **"Configure IPv4"** dropdown
    - Selecteer **"Manually"** (Handmatig)
 5. **Voer IP adres in**:
-   - **IP Address**: `192.168.123.100` (of ander adres in zelfde subnet)
+   - **IP Address**: `192.168.123.222` (of ander adres in zelfde subnet, bijvoorbeeld 192.168.123.100)
    - **Subnet Mask**: `255.255.255.0`
    - **Router**: Laat leeg (geen router nodig voor directe verbinding)
 6. **Klik op "Apply"**
@@ -65,21 +65,31 @@ De Go2 robot kan via een Ethernet kabel direct verbonden worden met je computer.
 networksetup -listallnetworkservices
 
 # Configureer USB Ethernet (vervang "USB 10/100/1000 LAN" met jouw interface naam)
-sudo networksetup -setmanual "USB 10/100/1000 LAN" 192.168.123.100 255.255.255.0
+sudo networksetup -setmanual "USB 10/100/1000 LAN" 192.168.123.222 255.255.255.0
 
 # Of als interface "en5" heet (check met ifconfig)
-sudo ifconfig en5 192.168.123.100 netmask 255.255.255.0 up
+sudo ifconfig en5 192.168.123.222 netmask 255.255.255.0 up
 ```
 
-**Vind Interface Naam**:
+**Vind Interface Naam voor 123 Subnet**:
 ```bash
 # Toon alle netwerk interfaces
 ifconfig
 
-# Zoek naar USB Ethernet (meestal "en5", "en6", etc.)
+# Zoek naar interface met IP 192.168.123.x
+# Bijvoorbeeld:
+# enxf8e43b808e06: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
+#         inet 192.168.123.222 netmask 0xffffff00 broadcast 192.168.123.255
+# In dit geval is de interface naam: enxf8e43b808e06
+
+# Of gebruik grep om alleen 123 subnet te tonen:
+ifconfig | grep -B 1 "192.168.123"
+
 # Of gebruik:
 networksetup -listallhardwareports
 ```
+
+**Belangrijk**: Noteer de interface naam die correspondeert met het 192.168.123 subnet. Deze naam heb je nodig als parameter bij het runnen van voorbeelden met de officiële SDK!
 
 ### Linux: USB Ethernet Configuratie
 
@@ -91,7 +101,7 @@ networksetup -listallhardwareports
 4. **Ga naar IPv4 tab**
 5. **Selecteer "Manual"**
 6. **Voeg IP adres toe**:
-   - **Address**: `192.168.123.100`
+   - **Address**: `192.168.123.222` (of ander adres in subnet)
    - **Netmask**: `255.255.255.0`
    - **Gateway**: Laat leeg
 7. **Klik op "Apply"**
@@ -107,12 +117,32 @@ ifconfig -a
 # Meestal "eth0", "eth1", "enp0s..." of "usb0" voor USB Ethernet
 
 # Configureer statisch IP (vervang "eth0" met jouw interface)
-sudo ip addr add 192.168.123.100/24 dev eth0
+sudo ip addr add 192.168.123.222/24 dev eth0
 sudo ip link set eth0 up
 
 # Of gebruik ifconfig (oudere distributies)
-sudo ifconfig eth0 192.168.123.100 netmask 255.255.255.0 up
+sudo ifconfig eth0 192.168.123.222 netmask 255.255.255.0 up
 ```
+
+**Vind Interface Naam voor 123 Subnet**:
+```bash
+# Toon alle netwerk interfaces
+ip addr show
+# Of:
+ifconfig
+
+# Zoek naar interface met IP 192.168.123.x
+# Bijvoorbeeld:
+# 2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500
+#     inet 192.168.123.222/24 brd 192.168.123.255 scope global eth0
+# In dit geval is de interface naam: eth0
+
+# Of gebruik grep:
+ip addr show | grep -B 2 "192.168.123"
+ifconfig | grep -B 1 "192.168.123"
+```
+
+**Belangrijk**: Noteer de interface naam die correspondeert met het 192.168.123 subnet. Deze naam heb je nodig als parameter bij het runnen van voorbeelden met de officiële SDK!
 
 **Persistent Configuratie (NetworkManager)**:
 ```bash
@@ -134,7 +164,7 @@ network:
   ethernets:
     eth0:  # Vervang met jouw interface naam
       addresses:
-        - 192.168.123.100/24
+        - 192.168.123.222/24
       dhcp4: false
 ```
 
@@ -154,10 +184,25 @@ sudo netplan apply
 5. **Selecteer "Internet Protocol Version 4 (TCP/IPv4)"**
 6. **Klik op "Properties"**
 7. **Selecteer "Use the following IP address"**:
-   - **IP address**: `192.168.123.100`
+   - **IP address**: `192.168.123.222` (of ander adres in subnet)
    - **Subnet mask**: `255.255.255.0`
    - **Default gateway**: Laat leeg
 8. **Klik op "OK"**
+
+**Vind Interface Naam**:
+```powershell
+# Toon alle netwerk adapters
+Get-NetAdapter
+
+# Zoek adapter met IP 192.168.123.x
+Get-NetIPAddress | Where-Object {$_.IPAddress -like "192.168.123.*"}
+
+# Of gebruik ipconfig
+ipconfig /all
+# Zoek naar adapter met IP 192.168.123.222
+```
+
+**Belangrijk**: Noteer de interface naam (bijvoorbeeld "Ethernet" of "USB Ethernet Adapter"). Deze naam heb je mogelijk nodig als parameter bij het runnen van voorbeelden.
 
 #### Methode 2: Via PowerShell (Command Line)
 
@@ -167,11 +212,11 @@ Get-NetAdapter
 
 # Configureer statisch IP (vervang "Ethernet" met jouw interface naam)
 New-NetIPAddress -InterfaceAlias "Ethernet" `
-    -IPAddress 192.168.123.100 `
+    -IPAddress 192.168.123.222 `
     -PrefixLength 24
 
 # Of gebruik netsh (oudere Windows versies)
-netsh interface ip set address "Ethernet" static 192.168.123.100 255.255.255.0
+netsh interface ip set address "Ethernet" static 192.168.123.222 255.255.255.0
 ```
 
 ## Stap 3: Configureer Robot IP Adres
@@ -207,9 +252,68 @@ Als je robot IP moet wijzigen:
 5. **Configureer IP adres**
 6. **Save**
 
-## Stap 4: Test Verbinding
+## Stap 4: Vind Netwerkkaart Naam (Belangrijk!)
 
-### 4.1 Test Netwerk Verbinding
+Na het configureren van het IP adres, moet je de **netwerkkaart naam** vinden die correspondeert met het 192.168.123 subnet. Deze naam is nodig als parameter bij het runnen van voorbeelden met de officiële SDK.
+
+### 4.1 Vind Netwerkkaart Naam
+
+**macOS/Linux**:
+```bash
+# Toon alle netwerk interfaces
+ifconfig
+
+# Zoek naar interface met IP 192.168.123.x
+# Bijvoorbeeld output:
+# enxf8e43b808e06: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
+#         inet 192.168.123.222 netmask 0xffffff00 broadcast 192.168.123.255
+# 
+# In dit geval is de netwerkkaart naam: enxf8e43b808e06
+
+# Of gebruik grep om alleen 123 subnet te tonen:
+ifconfig | grep -B 1 "192.168.123"
+```
+
+**Windows**:
+```powershell
+# Toon alle netwerk adapters
+Get-NetAdapter
+
+# Zoek adapter met IP 192.168.123.x
+Get-NetIPAddress | Where-Object {$_.IPAddress -like "192.168.123.*"}
+
+# Of gebruik ipconfig
+ipconfig /all
+```
+
+**Voorbeeld Output (macOS)**:
+```
+enxf8e43b808e06: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
+        options=4000<CHANNEL_IO>
+        ether f8:e4:3b:80:8e:06
+        inet 192.168.123.222 netmask 0xffffff00 broadcast 192.168.123.255
+        media: autoselect (1000baseT <full-duplex>)
+        status: active
+```
+
+In dit voorbeeld is de netwerkkaart naam: **`enxf8e43b808e06`**
+
+**Noteer deze naam!** Je hebt deze nodig bij het runnen van voorbeelden:
+```bash
+# Officiële SDK voorbeeld
+python unitree_sdk2_python/example/go2/high_level/go2_sport_client.py enxf8e43b808e06
+
+# Of in Python code
+from src.unitree_go2 import Go2RobotOfficial
+robot = Go2RobotOfficial(
+    ip_address="192.168.123.161",
+    network_interface="enxf8e43b808e06"  # Jouw netwerkkaart naam
+)
+```
+
+## Stap 5: Test Verbinding
+
+### 5.1 Test Netwerk Verbinding
 
 ```bash
 # Ping robot IP adres
@@ -226,7 +330,7 @@ PING 192.168.123.161 (192.168.123.161): 56 data bytes
 64 bytes from 192.168.123.161: icmp_seq=1 ttl=64 time=0.098 ms
 ```
 
-### 4.2 Test SDK Verbinding
+### 5.2 Test SDK Verbinding
 
 ```bash
 # Test custom wrapper
@@ -239,16 +343,16 @@ robot.disconnect()
 "
 ```
 
-### 4.3 Test Officiële SDK
+### 5.3 Test Officiële SDK
 
 ```bash
 # Test officiële SDK (als geïnstalleerd)
-# Vind Ethernet interface naam eerst
+# Gebruik de netwerkkaart naam die je in stap 4 hebt gevonden
 python -c "
 from src.unitree_go2 import Go2RobotOfficial
 robot = Go2RobotOfficial(
     ip_address='192.168.123.161',
-    network_interface='eth0'  # Vervang met jouw interface
+    network_interface='enxf8e43b808e06'  # Vervang met jouw netwerkkaart naam!
 )
 robot.connect()
 print('✓ Verbinding succesvol!')
@@ -256,7 +360,13 @@ robot.disconnect()
 "
 ```
 
-### 4.4 Gebruik Diagnostiek Script
+**Of gebruik officiële SDK voorbeelden direct**:
+```bash
+# Vervang 'enxf8e43b808e06' met jouw netwerkkaart naam
+python unitree_sdk2_python/example/go2/high_level/go2_sport_client.py enxf8e43b808e06
+```
+
+### 5.4 Gebruik Diagnostiek Script
 
 ```bash
 # Volledige diagnostiek
@@ -413,12 +523,13 @@ Voor directe verbinding tussen robot en computer:
 | Apparaat | IP Adres | Subnet Mask | Gateway |
 |----------|----------|-------------|---------|
 | **Robot** | `192.168.123.161` | `255.255.255.0` | - |
-| **Computer** | `192.168.123.100` | `255.255.255.0` | - |
+| **Computer** | `192.168.123.222` | `255.255.255.0` | - |
 
 **Belangrijk**: 
 - Beide apparaten moeten in hetzelfde subnet zitten (`192.168.123.0/24`)
 - Geen gateway nodig (directe verbinding)
 - Computer IP moet verschillen van robot IP
+- **"222" kan gewijzigd worden** naar een ander nummer (bijvoorbeeld 100, 101, etc.), zolang het maar in het subnet `192.168.123.0/24` valt
 
 ### Via Router (Als Robot Aangesloten op Router)
 
@@ -486,8 +597,8 @@ PC 2 ───┘
 
 - Alle apparaten in zelfde subnet
 - Robot IP: `192.168.123.161`
-- Computer IP: `192.168.123.100`
-- PC 2 IP: `192.168.123.101`
+- Computer IP: `192.168.123.222` (of ander nummer)
+- PC 2 IP: `192.168.123.223` (of ander nummer)
 
 ## Referenties
 
@@ -501,14 +612,22 @@ PC 2 ───┘
 **Snelle Setup**:
 
 1. **Sluit Ethernet kabel aan** op robot en computer
-2. **Configureer computer IP**: `192.168.123.100/24` (handmatig)
+2. **Configureer computer IP**: `192.168.123.222/24` (handmatig, "222" kan gewijzigd worden)
 3. **Robot IP**: `192.168.123.161` (standaard)
-4. **Test verbinding**: `ping 192.168.123.161`
-5. **Test SDK**: `python src/examples/diagnostics.py -i 192.168.123.161`
+4. **Vind netwerkkaart naam**: `ifconfig | grep -B 1 "192.168.123"` (noteer de naam!)
+5. **Test verbinding**: `ping 192.168.123.161`
+6. **Test SDK**: `python src/examples/diagnostics.py -i 192.168.123.161`
+7. **Gebruik netwerkkaart naam** bij officiële SDK voorbeelden
+
+**Belangrijk**: 
+- Noteer de netwerkkaart naam die correspondeert met het 192.168.123 subnet
+- Deze naam is nodig als parameter bij het runnen van officiële SDK voorbeelden
+- Bijvoorbeeld: `python example.py enxf8e43b808e06` (vervang met jouw naam)
 
 **Als het niet werkt**:
 - Check IP configuratie (beide in zelfde subnet)
 - Check interface status (moet "up" zijn)
 - Test kabel (probeer andere kabel)
 - Check firewall (poort 8080 UDP)
+- Check of je de juiste netwerkkaart naam gebruikt
 
