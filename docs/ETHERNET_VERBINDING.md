@@ -659,8 +659,42 @@ Als robot via Ethernet op router is aangesloten:
 | **Computer** | DHCP of Static | `255.255.255.0` | Router IP |
 
 **Vind Robot IP**:
-- Check router DHCP client list
-- Of gebruik netwerk scan: `nmap -sn 192.168.1.0/24`
+
+**Methode 1: Via Router Web Interface**
+1. Log in op router (meestal `192.168.1.1` of `192.168.0.1`)
+2. Ga naar **DHCP Clients** of **Connected Devices**
+3. Zoek naar "Unitree" of "Go2" of apparaat met MAC adres
+4. Noteer IP adres
+
+**Methode 2: Via Unitree Go App**
+1. Verbind telefoon metzelfde WiFi netwerk
+2. Open Unitree Go app
+3. Ga naar **Robot Info** → **Network Info** → **IP Address**
+4. Noteer IP adres
+
+**Methode 3: Via Netwerk Scan**
+```bash
+# Scan lokaal netwerk (vervang met jouw subnet)
+nmap -sn 192.168.1.0/24 | grep -B 2 "Unitree\|Go2"
+
+# Of gebruik arp tabel
+arp -a | grep -i "unitree\|go2"
+```
+
+**Methode 4: Via ARP Tabel**
+```bash
+# Toon alle apparaten op netwerk
+arp -a
+
+# Zoek naar robot (kan Unitree MAC adres bevatten)
+arp -a | grep -E "192\.168\.[0-9]+\.[0-9]+"
+```
+
+**Belangrijk**: 
+- Robot IP is nu NIET meer `192.168.123.161`
+- Robot krijgt IP van router DHCP (bijvoorbeeld `192.168.1.100`)
+- Computer moet opzelfde netwerk zitten (WiFi of Ethernet)
+- Geen handmatige IP configuratie nodig voor computer
 
 ## Veelgestelde Vragen (FAQ)
 
