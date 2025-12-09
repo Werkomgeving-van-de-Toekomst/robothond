@@ -11,7 +11,11 @@ De Jetson AGX Orin biedt extra rekenkracht voor:
 - **Onboard audio processing** zonder externe services
 - **Volledige Nederlandse ondersteuning** voor spraakcommando's
 
-## Architectuur
+## Architectuur Opties
+
+Er zijn twee manieren om audio naar de Jetson te krijgen:
+
+### Optie 1: Microfoon Direct op Jetson
 
 ```
 ┌─────────────────┐         ┌──────────────────┐         ┌─────────────┐
@@ -21,13 +25,55 @@ De Jetson AGX Orin biedt extra rekenkracht voor:
 └─────────────────┘         │  - Commando's     │         └─────────────┘
                             │  - Robot Control  │
                             └──────────────────┘
-                                     │
-                                     │ HTTP API
-                                     ▼
-                            ┌──────────────────┐
-                            │  Client Computer │
-                            │  (Optioneel)    │
+```
+
+**Voordelen**:
+- Eenvoudigste setup
+- Directe audio input
+- Geen netwerk latency voor audio
+
+**Nadelen**:
+- Microfoon moet dichtbij Jetson zijn
+- Mogelijk niet optimaal gepositioneerd voor robot interactie
+
+### Optie 2: Microfoon op Go2 Robot (Audio Streaming)
+
+```
+┌─────────────────┐         ┌──────────────────┐         ┌─────────────┐
+│   Go2 Robot     │         │  Jetson AGX Orin  │         │  Go2 Robot  │
+│   Microfoon     │────────▶│  Voice Server     │────────▶│  (Control)  │
+│                 │  Audio  │  - Whisper        │  UDP    │             │
+│                 │  Stream │  - Commando's     │         └─────────────┘
+└─────────────────┘         │  - Robot Control  │
                             └──────────────────┘
+```
+
+**Voordelen**:
+- Microfoon op robot (beter gepositioneerd)
+- Robot kan zelfstandig luisteren
+- Natuurlijkere interactie
+
+**Nadelen**:
+- Vereist audio streaming setup
+- Netwerk latency voor audio (meestal < 50ms)
+- Go2 moet audio streaming ondersteunen
+
+### Optie 3: Externe Microfoon via Netwerk
+
+```
+┌─────────────────┐
+│   Externe       │
+│   Microfoon     │────────┐
+│   (USB/Bluetooth)│       │
+└─────────────────┘       │
+                           │ Audio Stream
+                           ▼
+                  ┌──────────────────┐         ┌─────────────┐
+                  │  Jetson AGX Orin  │         │  Go2 Robot  │
+                  │  Voice Server     │────────▶│             │
+                  │  - Whisper        │  UDP    │             │
+                  │  - Commando's     │         └─────────────┘
+                  └──────────────────┘
 ```
 
 ## Installatie op Jetson
