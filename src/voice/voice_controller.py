@@ -75,6 +75,10 @@ class VoiceController:
         self.tts_engine.setProperty('rate', 150)  # Spreeksnelheid
         self.tts_engine.setProperty('volume', 0.9)
         
+        # Probeer Nederlandse stem te vinden
+        if "nl" in language.lower():
+            self._set_dutch_voice()
+        
         # Whisper setup (lokaal)
         self.whisper_model = None
         if self.use_whisper:
@@ -99,13 +103,39 @@ class VoiceController:
         
     def setup_default_handlers(self):
         """Setup standaard commando handlers"""
+        # Stop commando's
         self.register_command("stop", self.handle_stop)
+        self.register_command("stop", self.handle_stop)
+        self.register_command(r"stop\s+alle", self.handle_stop)
+        self.register_command("stoppen", self.handle_stop)
+        
+        # Sta op commando's
         self.register_command("sta op", self.handle_stand)
+        self.register_command("sta rechtop", self.handle_stand)
+        self.register_command("opstaan", self.handle_stand)
+        self.register_command("rechtop staan", self.handle_stand)
+        
+        # Ga zitten commando's
         self.register_command("ga zitten", self.handle_sit)
-        self.register_command("stop", self.handle_stop)
+        self.register_command("zit", self.handle_sit)
+        self.register_command("zitten", self.handle_sit)
+        self.register_command("ga zitten", self.handle_sit)
+        
+        # Model commando's
         self.register_command("model", self.handle_model_select)
+        self.register_command(r"gebruik\s+model", self.handle_model_select)
+        self.register_command(r"selecteer\s+model", self.handle_model_select)
+        
+        # Start commando's
         self.register_command("start", self.handle_start)
+        self.register_command("begin", self.handle_start)
+        self.register_command("ga", self.handle_start)
+        
+        # Help commando's
         self.register_command("help", self.handle_help)
+        self.register_command("hulp", self.handle_help)
+        self.register_command("wat kan je", self.handle_help)
+        self.register_command("commando's", self.handle_help)
     
     def register_command(self, pattern: str, handler: Callable):
         """
@@ -324,15 +354,16 @@ class VoiceController:
         """Handle help commando"""
         help_text = """
 Beschikbare commando's:
-- "sta op" - Laat robot rechtop staan
-- "ga zitten" - Laat robot zitten
-- "stop" - Stop alle beweging
+- "sta op" of "sta rechtop" - Laat robot rechtop staan
+- "ga zitten" of "zit" - Laat robot zitten
+- "stop" of "stoppen" - Stop alle beweging
 - "model [naam]" - Selecteer RL model
-- "start" - Start RL control
-- "help" - Toon deze help
+- "start" of "begin" - Start RL control
+- "zoek [term]" of "vind [term]" - Zoek op internet
+- "help" of "hulp" - Toon deze help
         """
         print(help_text)
-        self.speak("Beschikbare commando's: sta op, ga zitten, stop, model selecteren, start, help")
+        self.speak("Beschikbare commando's: sta op, ga zitten, stop, model selecteren, start, zoek, help")
 
 
 class Go2VoiceController(VoiceController):
