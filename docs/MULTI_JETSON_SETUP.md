@@ -283,9 +283,132 @@ client = JetsonVoiceClient(jetson_url="http://192.168.1.50:8889")  # Load balanc
 client.send_command("sta op")
 ```
 
+## Robot Verbinding met Meerdere Jetsons
+
+### Belangrijk: Robot Verbinding Strategie
+
+De Go2 robot ondersteunt **meerdere gelijktijdige verbindingen** via DDS/UDP, maar er zijn belangrijke overwegingen:
+
+1. **Beide Jetsons kunnen verbinden** met dezelfde robot
+2. **Conflicten voorkomen**: Alleen één Jetson moet commando's sturen tegelijk
+3. **Load balancer coördineert**: Load balancer zorgt dat commando's niet conflicteren
+
+### Architectuur: Hoe Beide Jetsons Verbinden
+
+```
+┌─────────────┐
+│   Go2 Robot │
+│ 192.168.123.161 │
+└──────┬──────┘
+       │
+       │ DDS/UDP (Poort 7400-7500)
+       │
+       ├─────────────────┐
+       │                 │
+       ▼                 ▼
+┌─────────────┐    ┌─────────────┐
+│  Jetson 1   │    │  Jetson 2   │
+│ eth0        │    │ eth0        │
+│ 192.168.123.222│ │ 192.168.123.223│
+└──────┬──────┘    └──────┬──────┘
+       │                  │
+       │ Voice Processing │
+       │                  │
+       └────────┬─────────┘
+                │
+                ▼
+         ┌──────────────────┐
+         │  Load Balancer   │
+         │  (Coördineert)   │
+         └──────────────────┘
+```
+
+### Netwerk Configuratie
+
+**Belangrijk**: Beide Jetsons moeten op hetzelfde netwerk zitten als de robot.
+
+#### Optie A: Directe Ethernet Verbinding (Aanbevolen)
+
+**Robot**: `192.168.123.161` (standaard)
+
+**Jetson 1**:
+```bash
+# Configureer netwerk interface
+sudo ifconfig eth0 192.168.123.222 netmask 255.255.255.0 up
+# Of gebruik netplan:
+sudo netplan apply
+```
+
+**Jetson 2**:
+```bash
+# Configureer netwerk interface (ander IP!)
+sudo ifconfig eth0 192.168.123.223 netmask 255.255.255.0 up
+# Of gebruik netplan:
+sudo netplan apply
+```
+
+**Test verbinding**:
+```bash
+# Op beide Jetsons
+ping 192.168.123.161  # Robot IP
+```
+
+#### Optie B: Via Router/Netwerk
+
+Als robot en Jetsons via router verbonden zijn:
+
+**Robot**: Krijgt IP via DHCP (bijv. `192.168.1.100`)
+
+**Jetson 1**: `192.168.1.101` (statisch of DHCP)
+**Jetson 2**: `192.168.1.102` (statisch of DHCP)
+
+**Test verbinding**:
+```bash
+# Op beide Jetsons
+ping <robot-ip>  # Vervang met robot IP
+```
+
 ## Configuratie
 
-### Stap 1: Setup Jetson Servers
+### Stap 1: Netwerk Setup op Beide Jetsons
+
+**Jetson 1**:
+```bash
+# Configureer netwerk (directe verbinding)
+sudo ifconfig eth0 192.168.123.222 netmask 255.255.255.0 up
+
+# Of via router (DHCP of statisch)
+# Check interface naam eerst
+ip link show  # Meestal eth0
+```
+
+**Jetson 2**:
+```bash
+# Configureer netwerk (ander IP dan Jetson 1!)
+sudo ifconfig eth0 192.168.123.223 netmask 255.255.255.0 up
+
+# Of via router
+# Zorg dat IP verschilt van Jetson 1
+```
+
+### Stap 2: Test Verbinding met Robot
+
+**Op beide Jetsons**:
+```bash
+# Test ping
+ping 192.168.123.161  # Of robot IP als via router
+
+# Test SDK verbinding
+python3 -c "
+from src.unitree_go2 import Go2RobotOfficial
+robot = Go2RobotOfficial(ip_address='192.168.123.161', network_interface='eth0')
+robot.connect()
+print('✓ Verbonden!')
+robot.disconnect()
+"
+```
+
+### Stap 3: Setup Jetson Voice Servers
 
 **Jetson 1**:
 ```bash
@@ -306,6 +429,11 @@ python3 src/voice/jetson_voice_server.py \
     --whisper-model medium \
     --language nl-NL
 ```
+
+**Belangrijk**: 
+- Beide gebruiken **dezelfde robot IP** (`192.168.123.161`)
+- Beide gebruiken **dezelfde netwerk interface** (`eth0`)
+- Beide gebruiken **dezelfde poort** (`8888`) - dit is OK omdat ze verschillende IP's hebben
 
 ### Stap 2: Start Load Balancer
 
@@ -477,7 +605,54 @@ if __name__ == "__main__":
 - Track latency per server
 - Alert bij hoge load of falen
 
+## Belangrijke Overwegingen
+
+### Commando Conflicten Voorkomen
+
+**Probleem**: Als beide Jetsons tegelijk commando's sturen, kunnen conflicten ontstaan.
+
+**Oplossing**: 
+1. **Load balancer coördineert**: Alleen load balancer stuurt commando's naar robot
+2. **Jetsons doen alleen voice processing**: Jetsons verwerken spraak, load balancer stuurt commando's
+3. **Queue systeem**: Commando's worden in queue gezet en sequentieel verwerkt
+
+### Robot Verbinding Pattern
+
+**Aanbevolen Architectuur**:
+
+```
+Commando's → Load Balancer → Jetson (Voice Processing) → Load Balancer → Robot
+```
+
+**Niet aanbevolen**:
+```
+Commando's → Jetson 1 → Robot
+Commando's → Jetson 2 → Robot  (Conflicten mogelijk!)
+```
+
+### Load Balancer als Single Point of Control
+
+De load balancer fungeert als **single point of control**:
+- Ontvangt commando's van clients
+- Verdeelt voice processing over Jetsons
+- Stuurt commando's naar robot (één tegelijk)
+- Voorkomt conflicten
+
 ## Troubleshooting
+
+### Probleem: Beide Jetsons kunnen niet verbinden met robot
+
+**Oplossing**:
+```bash
+# Check netwerk configuratie op beide Jetsons
+ip addr show eth0
+
+# Jetson 1 moet hebben: 192.168.123.222
+# Jetson 2 moet hebben: 192.168.123.223 (anders IP!)
+
+# Test verbinding
+ping 192.168.123.161  # Robot IP
+```
 
 ### Probleem: Load balancer kan Jetsons niet bereiken
 
