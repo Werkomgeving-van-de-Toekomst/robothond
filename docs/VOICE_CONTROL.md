@@ -366,6 +366,21 @@ controller.stop_listening()
 robot.disconnect()
 ```
 
+## Voice Control Direct op Robot
+
+Je kunt voice control ook direct op de Go2 robot zelf draaien (zonder Jetson):
+
+```bash
+# Op robot zelf (via SSH of deployment)
+python3 src/examples/voice_control_robot.py \
+    --robot-ip 192.168.123.161 \
+    --whisper-model tiny  # Klein model voor robot!
+```
+
+**Belangrijk**: Gebruik kleine Whisper modellen (`tiny` of `base`) op de robot zelf.
+
+Zie [Voice op Robot](./VOICE_OP_ROBOT.md) voor complete documentatie.
+
 ## Volgende Stappen
 
 1. **Test microfoon**: Zorg dat microfoon werkt
@@ -373,4 +388,12 @@ robot.disconnect()
 3. **Integreer met app**: Gebruik via API server
 4. **Voeg custom commando's toe**: Pas aan voor jouw gebruik
 5. **Fine-tune**: Pas taal/herkenning aan indien nodig
+6. **Kies platform**: Robot zelf, Jetson, of cloud-based
+
+## Referenties
+
+- [Voice op Robot](./VOICE_OP_ROBOT.md) - Voice control direct op robot
+- [Jetson Voice Processing](./JETSON_VOICE_PROCESSING.md) - Voice processing met Jetson
+- [Unitree Go2 SDK Documentatie](./GO2_SDK_REFERENTIE.md)
+- [Robot Flows Guide](./ROBOT_FLOWS.md)
 
