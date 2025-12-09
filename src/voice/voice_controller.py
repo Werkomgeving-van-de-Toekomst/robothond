@@ -78,6 +78,24 @@ class VoiceController:
         # Probeer Nederlandse stem te vinden
         if "nl" in language.lower():
             self._set_dutch_voice()
+    
+    def _set_dutch_voice(self):
+        """Probeer Nederlandse stem in te stellen voor text-to-speech"""
+        try:
+            voices = self.tts_engine.getProperty('voices')
+            # Zoek naar Nederlandse stem
+            for voice in voices:
+                if 'dutch' in voice.name.lower() or 'nederlands' in voice.name.lower() or 'nl' in voice.id.lower():
+                    self.tts_engine.setProperty('voice', voice.id)
+                    print(f"✓ Nederlandse stem ingesteld: {voice.name}")
+                    return
+            
+            # Als geen Nederlandse stem gevonden, gebruik eerste beschikbare
+            if voices:
+                self.tts_engine.setProperty('voice', voices[0].id)
+                print(f"⚠️  Geen Nederlandse stem gevonden, gebruik: {voices[0].name}")
+        except Exception as e:
+            print(f"⚠️  Kon stem niet instellen: {e}")
         
         # Whisper setup (lokaal)
         self.whisper_model = None
