@@ -7,6 +7,11 @@ pyaudio>=0.2.11
 openai-whisper>=20231117
 scipy>=1.10.0  # Voor audio resampling
 
+# Flask voor Jetson Voice Server
+flask>=2.3.0
+flask-cors>=4.0.0
+requests>=2.31.0  # Voor client
+
 # Optioneel: Voor OpenAI API (in plaats van lokale Whisper)
 # openai>=1.0.0
 

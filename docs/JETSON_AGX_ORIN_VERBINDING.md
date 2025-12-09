@@ -685,10 +685,60 @@ sudo jetson_clocks             # Max performance
 sudo tegrastats                 # Monitor status
 ```
 
+## Voice Processing op Jetson
+
+De Jetson AGX Orin is ideaal voor spraakverwerking omdat het:
+- **Krachtige GPU** heeft voor Whisper model inferentie
+- **Real-time processing** kan doen zonder latency
+- **Grote Whisper modellen** kan draaien (medium, large) voor betere accuratesse
+- **Onboard microfoon** kan gebruiken of externe audio input
+
+### Voice Server Setup
+
+1. **Installeer voice dependencies op Jetson**:
+   ```bash
+   pip install SpeechRecognition pyttsx3 pyaudio openai-whisper scipy flask flask-cors
+   ```
+
+2. **Start Voice Server op Jetson**:
+   ```bash
+   python3 src/voice/jetson_voice_server.py \
+       --robot-ip 192.168.123.161 \
+       --network-interface eth0 \
+       --port 8888 \
+       --whisper-model base
+   ```
+
+3. **Gebruik grotere Whisper modellen voor betere kwaliteit**:
+   ```bash
+   # Medium model (betere accuratesse, iets langzamer)
+   python3 src/voice/jetson_voice_server.py --whisper-model medium
+   
+   # Large model (beste kwaliteit, langzamer)
+   python3 src/voice/jetson_voice_server.py --whisper-model large
+   ```
+
+### Voice Client (vanaf andere computer)
+
+```bash
+# Stuur commando naar Jetson
+python3 src/voice/jetson_voice_client.py \
+    --jetson-url http://192.168.1.100:8888 \
+    --command "sta op"
+
+# Check status
+python3 src/voice/jetson_voice_client.py \
+    --jetson-url http://192.168.1.100:8888 \
+    --status
+```
+
+Zie [Voice Processing op Jetson](./JETSON_VOICE_PROCESSING.md) voor complete documentatie.
+
 ## Referenties
 
 - [Unitree Go2 SDK Documentatie](./GO2_SDK_REFERENTIE.md)
 - [Ethernet Verbinding Guide](./ETHERNET_VERBINDING.md)
+- [Voice Processing op Jetson](./JETSON_VOICE_PROCESSING.md)
 - [NVIDIA Jetson Developer Guide](https://developer.nvidia.com/embedded/jetson-agx-orin)
 - [CycloneDDS Documentatie](https://github.com/eclipse-cyclonedds/cyclonedds)
 
