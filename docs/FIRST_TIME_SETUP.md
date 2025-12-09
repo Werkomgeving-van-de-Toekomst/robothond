@@ -170,6 +170,7 @@ export CYCLONEDDS_HOME="/Users/marc/cyclonedds/install"
 4. **Check firewall**:
    - Staat poort 8080 open?
    - Test met: `telnet 192.168.123.161 8080`
+   - Zie [Firewall Troubleshooting](./FIREWALL_TROUBLESHOOTING.md) voor gedetailleerde instructies
 
 ### "Robot commando's werken niet"
 
