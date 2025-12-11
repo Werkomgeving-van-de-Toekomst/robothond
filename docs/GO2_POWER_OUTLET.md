@@ -384,6 +384,8 @@ Go2 (28-33.6V) → Converter (12V) → USB-C PD Trigger (20V) → Jetson USB-C
 | Fuses & Holder | €5 | Veiligheid |
 | **Totaal** | **€50-70** | Professionele setup |
 
+📦 **Zie [BESTELLIJST_POWER_SETUP.md](BESTELLIJST_POWER_SETUP.md) voor complete bestellijst met specifieke producten en webshops!**
+
 ## Vergelijking: Powerbank vs Go2 Power
 
 | Aspect | Powerbank | Go2 Power Outlet |
@@ -405,6 +407,7 @@ Go2 (28-33.6V) → Converter (12V) → USB-C PD Trigger (20V) → Jetson USB-C
 
 ## Zie Ook
 
+- **[BESTELLIJST_POWER_SETUP.md](BESTELLIJST_POWER_SETUP.md)** - **Complete bestellijst met specifieke producten** ⭐
 - [JETSON_GO2_MONTAGE.md](JETSON_GO2_MONTAGE.md) - Complete montage handleiding
 - [JETSON_AGX_ORIN_VERBINDING.md](JETSON_AGX_ORIN_VERBINDING.md) - Netwerk setup
 
