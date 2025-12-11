@@ -67,7 +67,7 @@
 
 ### Print Oriëntatie
 
-Print met de **platte kant naar beneden** (mounting tabs naar boven gericht tijdens print).
+Print met de **platte kant naar beneden** (rails naar boven gericht tijdens print).
 
 ```
 Print bed:
@@ -75,10 +75,14 @@ Print bed:
     ┌─────────────────────────┐
     │                         │
     │    Basis plaat          │  ← Plat op bed
+    │    (met rails)          │
     │                         │
     └─────────────────────────┘
          ↑ Standoffs groeien omhoog
+         ↑ Rails groeien naar beneden
 ```
+
+**Belangrijk**: De T-slot rails worden naar beneden geprint en hebben supports nodig!
 
 ### Print Tijd
 
@@ -155,9 +159,19 @@ jetson_depth = 110;
 // Standoff hoogte (meer ruimte voor ventilatie)
 standoff_height = 15;  // Verhoog naar 20 voor betere koeling
 
+// Mounting methode
+use_slide_rails = true;      // T-slot rails (schuiven in Go2 gleuven) - AANBEVOLEN
+use_mount_tabs = false;      // Mounting tabs (schroeven) - alleen als use_slide_rails = false
+
 // Power opties
 include_powerbank_mount = false;  // Powerbank mount
 include_converter_mount = true;    // DC-DC converter mount (Go2 power)
+
+// Go2 gleuf specificaties (pas aan als je Go2 andere afmetingen heeft)
+go2_groove_width = 6;        // Breedte van de gleuf (mm)
+go2_groove_depth = 3;        // Diepte van de gleuf (mm)
+go2_groove_spacing = 150;    // Afstand tussen gleuven (center to center)
+go2_rail_length = 180;       // Lengte van de rail
 
 // Powerbank afmetingen (pas aan voor jouw powerbank)
 powerbank_width = 80;
@@ -179,6 +193,9 @@ converter_mount_spacing = 15;  // Afstand tussen Jetson en converter
 |------|--------|--------------|
 | M3 x 8mm schroeven | 4 | Voor Jetson bevestiging |
 | M3 moeren | 4 | Optioneel (standoffs hebben gaten) |
+| **Voor gleuf montage (aanbevolen):** |
+| Geen extra hardware nodig! | - | Mount schuift in Go2 gleuven |
+| **Voor schroef montage (alternatief):** |
 | M4 of M5 schroeven | 4 | Voor Go2 bevestiging (check Go2 specs) |
 | Korte Ethernet kabel | 1 | 30-50cm |
 | **Converter mount (optioneel):** |
@@ -189,12 +206,37 @@ converter_mount_spacing = 15;  // Afstand tussen Jetson en converter
 
 ### Montage Stappen
 
+#### Methode 1: Gleuf Montage (Aanbevolen) ⭐
+
+Deze mount is ontworpen om **in de Go2 payload gleuven te schuiven** zoals beschreven in de [Unitree Payload documentatie](https://support.unitree.com/home/en/developer/Payload).
+
 1. **Print de mount** volgens bovenstaande instructies
-2. **Verwijder supports** en schuur eventuele ruwe randen
-3. **Test fit** de Jetson op de standoffs
-4. **Bevestig Jetson** met M3 schroeven
-5. **Plaats op Go2** en bevestig met M4/M5 schroeven in de tabs
-6. **Route kabels** door de kabel slots
+   - Zorg dat `use_slide_rails = true` in de SCAD file
+2. **Verwijder supports** zorgvuldig van de T-slot rails
+3. **Schuur rails** lichtjes voor soepel schuiven (optioneel)
+4. **Test fit** de Jetson op de standoffs
+5. **Bevestig Jetson** met M3 schroeven
+6. **Schuif mount in Go2 gleuven**:
+   - Houd mount horizontaal
+   - Schuif linker rail in linker gleuf
+   - Schuif rechter rail in rechter gleuf
+   - Duw voorzichtig naar achteren tot mount goed zit
+7. **Route kabels** door de kabel slots
+
+**Voordelen gleuf montage:**
+- ✅ Geen schroeven nodig
+- ✅ Snel te monteren/demonteren
+- ✅ Stevig bevestigd door T-slot vorm
+- ✅ Geen gaten in Go2 nodig
+
+#### Methode 2: Schroef Montage (Alternatief)
+
+Als je liever schroeven gebruikt:
+
+1. **Print de mount** met `use_slide_rails = false` en `use_mount_tabs = true`
+2. **Volg stappen 2-5** hierboven
+3. **Plaats op Go2** en bevestig met M4/M5 schroeven in de tabs
+4. **Route kabels** door de kabel slots
 
 **Voor converter mount:**
 7. **Bevestig converter** op de converter mount met M3 schroeven

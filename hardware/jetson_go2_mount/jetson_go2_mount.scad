@@ -5,6 +5,13 @@
  * - Unitree Go2 Payload specificaties: https://support.unitree.com/home/en/developer/Payload
  * - Jetson AGX Orin Developer Kit afmetingen
  * 
+ * MONTAGE METHODE:
+ * - Deze mount gebruikt T-slot rails die in de Go2 payload gleuven schuiven
+ * - Schuif de rails aan beide kanten in de Go2 gleuven
+ * - Geen schroeven nodig - de T-slot vorm houdt de mount op zijn plek
+ * - Zet use_slide_rails = true voor gleuf montage
+ * - Zet use_slide_rails = false en use_mount_tabs = true voor schroef montage
+ * 
  * Auteur: Go2 Robot Project
  * Licentie: MIT
  * 
@@ -12,7 +19,8 @@
  * - Materiaal: PETG of ABS (sterker dan PLA)
  * - Layer hoogte: 0.2mm
  * - Infill: 40-50%
- * - Supports: Ja
+ * - Supports: Ja (voor rails)
+ * - Print orientatie: Plat op bed, rails naar beneden
  */
 
 // === PARAMETERS ===
@@ -26,16 +34,25 @@ jetson_height = 71.65;
 jetson_hole_diameter = 3.2;
 jetson_hole_inset = 4;  // Afstand van rand tot hole center
 
-// Go2 payload rail afmetingen (geschat op basis van Unitree specs)
+// Go2 payload rail afmetingen (gebaseerd op Unitree Payload specs)
 go2_rail_width = 150;       // Breedte tussen rails
 go2_rail_depth = 200;       // Lengte van payload area
 go2_mount_hole_diameter = 5; // M4 of M5 mounting holes
 go2_mount_hole_spacing_x = 140;
 go2_mount_hole_spacing_y = 180;
 
+// Go2 payload rail gleuf specificaties (T-slot rails)
+go2_groove_width = 6;       // Breedte van de gleuf (mm)
+go2_groove_depth = 3;       // Diepte van de gleuf (mm)
+go2_groove_spacing = 150;   // Afstand tussen gleuven (center to center)
+go2_rail_length = 180;      // Lengte van de rail (moet in gleuf passen)
+go2_rail_thickness = 2.5;   // Dikte van de rail (iets kleiner dan gleuf voor speling)
+go2_rail_height = 4;        // Hoogte van de rail (moet in gleuf passen)
+
 // Mount plaat parameters
+// Plate breedte moet overeenkomen met Go2 gleuf spacing voor juiste uitlijning
 plate_thickness = 4;
-plate_width = 160;  // Wordt uitgebreid als converter mount actief is
+plate_width = go2_groove_spacing;  // Gelijk aan gleuf spacing voor perfecte uitlijning
 plate_depth = 140;
 plate_corner_radius = 8;
 
@@ -73,6 +90,10 @@ converter_mount_spacing = 15;  // Afstand tussen Jetson en converter
 // Lip/rand voor extra stevigheid
 lip_height = 8;
 lip_thickness = 2;
+
+// Mounting opties
+use_slide_rails = true;      // Gebruik T-slot rails (schuiven in gleuven)
+use_mount_tabs = false;      // Gebruik mounting tabs (schroeven) - alleen als use_slide_rails = false
 
 // === MODULES ===
 
@@ -113,7 +134,28 @@ module standoff(height, outer_d, hole_d) {
     }
 }
 
-// Go2 mounting tab
+// Go2 T-slot rail (schuift in Go2 payload gleuven)
+module go2_t_slot_rail(length, groove_width, groove_depth, rail_thickness, rail_height) {
+    // T-slot afmetingen met speling voor soepel schuiven
+    slot_top_width = groove_width - 0.3;      // Bovenkant (smaller, past door opening)
+    slot_bottom_width = groove_width - 0.2;   // Onderkant (iets smaller dan gleuf)
+    slot_top_thickness = 1.5;                 // Dikte van T-top
+    slot_bottom_thickness = rail_thickness;   // Dikte van onderste deel
+    
+    translate([0, 0, -rail_height]) {
+        // Onderste deel (steel, past door gleuf opening)
+        translate([(groove_width - slot_bottom_width)/2, 0, 0]) {
+            cube([slot_bottom_width, length, slot_bottom_thickness]);
+        }
+        
+        // Bovenste deel (T-vorm, blijft achter gleuf)
+        translate([(groove_width - slot_top_width)/2, 0, slot_bottom_thickness]) {
+            cube([slot_top_width, length, slot_top_thickness]);
+        }
+    }
+}
+
+// Go2 mounting tab (voor schroef bevestiging, optioneel)
 module go2_mount_tab(hole_d) {
     tab_width = 20;
     tab_depth = 15;
@@ -268,20 +310,54 @@ module jetson_go2_mount() {
             translate([jetson_offset_x, jetson_offset_y, 0])
                 jetson_lip(jetson_width, jetson_depth, lip_height, lip_thickness);
             
-            // Go2 mounting tabs
-            // Voorste tabs
-            translate([plate_width/2 - go2_mount_hole_spacing_x/2, -10, 0])
-                go2_mount_tab(go2_mount_hole_diameter);
-            translate([plate_width/2 + go2_mount_hole_spacing_x/2, -10, 0])
-                go2_mount_tab(go2_mount_hole_diameter);
+            // Go2 mounting: T-slot rails (schuiven in gleuven)
+            if (use_slide_rails) {
+                // Bereken rail positie (gecentreerd op plate)
+                rail_offset_y = (plate_depth - go2_rail_length) / 2;
+                
+                // Linker rail (schuift in linker gleuf van Go2)
+                // Rail loopt langs de linker zijkant, naar beneden
+                translate([-go2_groove_width/2, rail_offset_y, 0]) {
+                    rotate([0, 0, 0])  // Geen rotatie, rail loopt in Y-richting
+                        go2_t_slot_rail(
+                            go2_rail_length,
+                            go2_groove_width,
+                            go2_groove_depth,
+                            go2_rail_thickness,
+                            go2_rail_height
+                        );
+                }
+                
+                // Rechter rail (schuift in rechter gleuf van Go2)
+                // Rail loopt langs de rechter zijkant, naar beneden
+                translate([plate_width - go2_groove_width/2, rail_offset_y, 0]) {
+                    rotate([0, 0, 0])  // Geen rotatie, rail loopt in Y-richting
+                        go2_t_slot_rail(
+                            go2_rail_length,
+                            go2_groove_width,
+                            go2_groove_depth,
+                            go2_rail_thickness,
+                            go2_rail_height
+                        );
+                }
+            }
             
-            // Achterste tabs
-            translate([plate_width/2 - go2_mount_hole_spacing_x/2, plate_depth + 10, 0])
-                rotate([0, 0, 180])
+            // Go2 mounting tabs (optioneel, alleen als use_slide_rails = false)
+            if (use_mount_tabs && !use_slide_rails) {
+                // Voorste tabs
+                translate([plate_width/2 - go2_mount_hole_spacing_x/2, -10, 0])
                     go2_mount_tab(go2_mount_hole_diameter);
-            translate([plate_width/2 + go2_mount_hole_spacing_x/2, plate_depth + 10, 0])
-                rotate([0, 0, 180])
+                translate([plate_width/2 + go2_mount_hole_spacing_x/2, -10, 0])
                     go2_mount_tab(go2_mount_hole_diameter);
+                
+                // Achterste tabs
+                translate([plate_width/2 - go2_mount_hole_spacing_x/2, plate_depth + 10, 0])
+                    rotate([0, 0, 180])
+                        go2_mount_tab(go2_mount_hole_diameter);
+                translate([plate_width/2 + go2_mount_hole_spacing_x/2, plate_depth + 10, 0])
+                    rotate([0, 0, 180])
+                        go2_mount_tab(go2_mount_hole_diameter);
+            }
             
             // Powerbank mount (optioneel)
             if (include_powerbank_mount) {
