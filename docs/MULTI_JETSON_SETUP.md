@@ -717,8 +717,7 @@ python3 src/voice/jetson_voice_client.py \
 
 ## Referenties
 
-- [Jetson-Robot Verbinding](./JETSON_ROBOT_VERBINDING.md) - **BELANGRIJK**: Hoe beide Jetsons met robot verbinden
 - [Jetson Voice Processing](./JETSON_VOICE_PROCESSING.md)
 - [Jetson AGX Orin Verbinding](./JETSON_AGX_ORIN_VERBINDING.md)
-- [Nederlandse Voice Control](./NEDERLANDSE_VOICE_CONTROL.md)
+- [Voice Control](./VOICE_CONTROL.md) - Complete voice guide inclusief Nederlandse commando's
 

@@ -144,7 +144,7 @@ Na het succesvol uitvoeren van de tests kun je:
 
 ## Hulp Nodig?
 
-- Bekijk `docs/API.md` voor API documentatie
+- Bekijk `docs/GO2_SDK_REFERENTIE.md` voor API documentatie
 - Bekijk `README.md` voor algemene informatie
 - Raadpleeg de officiële Unitree documentatie: https://support.unitree.com/home/en/developer
 

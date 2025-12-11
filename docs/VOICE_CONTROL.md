@@ -89,29 +89,34 @@ python src/examples/voice_control.py \
     --openai-key jouw-api-key
 ```
 
-## Beschikbare Commando's
+## Beschikbare Commando's (Nederlands)
 
-### Basis Commando's
+### Basis Bewegingen
 
-- **"sta op"** - Laat robot rechtop staan
-- **"ga zitten"** - Laat robot zitten  
-- **"stop"** - Stop alle beweging
-- **"help"** - Toon beschikbare commando's
+| Commando | Alternatieven | Actie |
+|----------|---------------|-------|
+| **"sta op"** | "sta rechtop", "opstaan", "rechtop staan" | Robot staat rechtop |
+| **"ga zitten"** | "zit", "zitten" | Robot gaat zitten |
+| **"stop"** | "stoppen", "stop alle" | Stop alle beweging |
+| **"help"** | "hulp", "wat kan je", "commando's" | Toon beschikbare commando's |
 
-### RL Model Commando's
+### Model Selectie
 
-- **"model [naam]"** - Selecteer RL model (bijv. "model go2_rl")
-- **"gebruik model [naam]"** - Selecteer model
-- **"selecteer model [naam]"** - Selecteer model
-- **"start"** of **"start rl"** - Start RL control
-- **"stop rl"** - Stop RL control
+| Commando | Voorbeeld | Actie |
+|----------|-----------|-------|
+| **"model [naam]"** | "model basic" | Selecteer RL model |
+| **"gebruik model [naam]"** | "gebruik model advanced" | Activeer model |
+| **"selecteer model [naam]"** | "selecteer model test" | Selecteer model |
+| **"start"** | "begin", "ga", "start rl" | Start RL control |
+| **"stop rl"** | "stop besturing" | Stop RL control |
 
-### Internet Zoeken Commando's
+### Internet Zoeken
 
-- **"zoek [term]"** - Zoek op internet (bijv. "zoek Unitree Go2")
-- **"vind [term]"** - Zoek op internet
-- **"google [term]"** - Zoek op internet
-- **"zoek op internet [term]"** - Zoek op internet
+| Commando | Voorbeeld | Actie |
+|----------|-----------|-------|
+| **"zoek [term]"** | "zoek unitree go2" | Zoek op internet |
+| **"vind [term]"** | "vind robot informatie" | Zoek op internet |
+| **"zoek naar [term]"** | "zoek naar robots" | Zoek op internet |
 
 Resultaten worden automatisch getoond op gekoppelde PC display (als display server draait).
 
@@ -394,6 +399,7 @@ Zie [Voice op Robot](./VOICE_OP_ROBOT.md) voor complete documentatie.
 
 - [Voice op Robot](./VOICE_OP_ROBOT.md) - Voice control direct op robot
 - [Jetson Voice Processing](./JETSON_VOICE_PROCESSING.md) - Voice processing met Jetson
-- [Unitree Go2 SDK Documentatie](./GO2_SDK_REFERENTIE.md)
+- [Multi-Jetson Setup](./MULTI_JETSON_SETUP.md) - Meerdere Jetsons voor voice
+- [Go2 SDK Referentie](./GO2_SDK_REFERENTIE.md)
 - [Robot Flows Guide](./ROBOT_FLOWS.md)
 

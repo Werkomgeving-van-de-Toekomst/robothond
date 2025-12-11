@@ -542,9 +542,8 @@ Zie [Multi-Jetson Setup](./MULTI_JETSON_SETUP.md) voor complete documentatie.
 ## Referenties
 
 - [Multi-Jetson Setup](./MULTI_JETSON_SETUP.md) - Meerdere Jetsons parallel gebruiken
-- [Nederlandse Voice Control](./NEDERLANDSE_VOICE_CONTROL.md) - Complete guide voor Nederlandse commando's
 - [Jetson AGX Orin Verbinding](./JETSON_AGX_ORIN_VERBINDING.md)
-- [Voice Control Guide](./VOICE_CONTROL.md)
+- [Voice Control Guide](./VOICE_CONTROL.md) - Complete voice guide inclusief Nederlandse commando's
 - [Voice op Robot](./VOICE_OP_ROBOT.md)
 - [OpenAI Whisper GitHub](https://github.com/openai/whisper)
 - [NVIDIA Jetson Developer Guide](https://developer.nvidia.com/embedded/jetson-agx-orin)

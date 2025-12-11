@@ -273,5 +273,5 @@ Na succesvolle setup:
 - [Go2 Handleiding](./GO2_HANDLEIDING.md)
 - [Go2 SDK Referentie](./GO2_SDK_REFERENTIE.md)
 - [Officiële SDK Integratie](./OFFICIELE_SDK_INTEGRATIE.md)
-- [EDU Variant Identificatie](./GO2_EDU_IDENTIFICATIE.md)
+- [Netwerk Overzicht](./NETWERK_OVERZICHT.md)
 
