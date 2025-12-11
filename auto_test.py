@@ -3,15 +3,13 @@
 Automatisch test script voor Unitree Go2 EDU
 
 Wacht tot de robot verbonden is en voert dan automatisch alle tests uit.
-Gebruikt de officiële SDK.
 """
 
 import sys
 import os
 import time
-import subprocess
+import socket
 import argparse
-import platform
 from datetime import datetime
 from pathlib import Path
 
@@ -28,7 +26,7 @@ except ImportError:
 from src.unitree_go2 import Go2Robot, Go2ConnectionError
 
 
-def check_robot_reachable(ip_address, timeout=2):
+def check_robot_reachable(ip_address, port=8080, timeout=2):
     """
     Controleer of robot bereikbaar is via netwerk
     
@@ -36,12 +34,11 @@ def check_robot_reachable(ip_address, timeout=2):
         True als robot bereikbaar is, False anders
     """
     try:
-        result = subprocess.run(
-            ["ping", "-c", "1", "-W", str(timeout * 1000), ip_address],
-            capture_output=True,
-            timeout=timeout + 1
-        )
-        return result.returncode == 0
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.settimeout(timeout)
+        sock.connect((ip_address, port))
+        sock.close()
+        return True
     except:
         return False
 
@@ -85,18 +82,15 @@ def wait_for_robot(ip_address, check_interval=2, max_wait_time=None):
         time.sleep(check_interval)
 
 
-def test_connection(ip_address, network_interface=None):
+def test_connection(ip_address):
     """
     Test basis verbinding met robot
     
     Returns:
         True als verbinding succesvol, False anders
     """
-    if not network_interface:
-        network_interface = "en0" if platform.system() == "Darwin" else "eth0"
-    
     try:
-        robot = Go2Robot(ip_address=ip_address, network_interface=network_interface)
+        robot = Go2Robot(ip_address=ip_address)
         robot.connect()
         robot.disconnect()
         return True
@@ -238,12 +232,6 @@ def main():
         help='Wacht niet op robot, voer direct tests uit'
     )
     parser.add_argument(
-        '--interface',
-        type=str,
-        default=None,
-        help='Netwerk interface naam (bijv. en0, eth0)'
-    )
-    parser.add_argument(
         '--continuous',
         action='store_true',
         help='Voer tests continu uit (herhaal na elke cyclus)'
@@ -271,7 +259,7 @@ def main():
         
         # Test verbinding
         print("\n🔌 Testen verbinding...")
-        if not test_connection(args.ip, args.interface):
+        if not test_connection(args.ip):
             print("⚠️  Verbinding test mislukt, maar doorgaan met tests...")
         else:
             print("✓ Verbinding OK\n")

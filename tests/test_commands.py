@@ -2,30 +2,11 @@
 Commando tests voor Unitree Go2 EDU
 
 Test basis commando's zoals stand, sit, move, stop.
-Gebruikt de officiële SDK.
 """
 
 import pytest
 import time
-import os
-import platform
-from src.unitree_go2 import Go2Robot, Go2CommandError, Go2ConnectionError, HAS_OFFICIAL_SDK
-
-
-# Skip alle tests als officiële SDK niet beschikbaar is
-pytestmark = pytest.mark.skipif(
-    not HAS_OFFICIAL_SDK,
-    reason="Officiële SDK niet beschikbaar - installeer CycloneDDS"
-)
-
-
-def get_test_config():
-    """Haal test configuratie op"""
-    return {
-        'ip_address': os.getenv('GO2_ROBOT_IP', '192.168.123.161'),
-        'network_interface': os.getenv('GO2_NETWORK_INTERFACE', 
-                                       'en0' if platform.system() == 'Darwin' else 'eth0')
-    }
+from src.unitree_go2 import Go2Robot, Go2CommandError, Go2ConnectionError
 
 
 class TestCommands:
@@ -34,11 +15,7 @@ class TestCommands:
     @pytest.fixture(scope="class")
     def robot(self):
         """Setup robot voor tests"""
-        config = get_test_config()
-        robot = Go2Robot(
-            ip_address=config['ip_address'],
-            network_interface=config['network_interface']
-        )
+        robot = Go2Robot(ip_address="192.168.123.161")
         try:
             robot.connect()
             yield robot
@@ -51,7 +28,7 @@ class TestCommands:
         try:
             result = robot.stand()
             print(f"✓ Stand commando: {result}")
-            time.sleep(2)
+            time.sleep(2)  # Wacht zodat robot kan reageren
             assert result is not None
         except Go2CommandError as e:
             pytest.fail(f"Stand commando mislukt: {e}")
@@ -61,7 +38,7 @@ class TestCommands:
         try:
             result = robot.sit()
             print(f"✓ Sit commando: {result}")
-            time.sleep(2)
+            time.sleep(2)  # Wacht zodat robot kan reageren
             assert result is not None
         except Go2CommandError as e:
             pytest.fail(f"Sit commando mislukt: {e}")
@@ -107,6 +84,22 @@ class TestCommands:
         except Go2CommandError as e:
             pytest.fail(f"Beweging achteruit mislukt: {e}")
     
+    def test_move_sideways(self, robot):
+        """Test beweging zijwaarts"""
+        try:
+            robot.stand()
+            time.sleep(1)
+            
+            result = robot.move(vx=0.0, vy=0.2, vyaw=0.0)
+            print(f"✓ Beweging zijwaarts: {result}")
+            time.sleep(2)
+            
+            robot.stop()
+            time.sleep(1)
+            assert result is not None
+        except Go2CommandError as e:
+            pytest.fail(f"Beweging zijwaarts mislukt: {e}")
+    
     def test_rotate(self, robot):
         """Test draaien"""
         try:
@@ -122,3 +115,20 @@ class TestCommands:
             assert result is not None
         except Go2CommandError as e:
             pytest.fail(f"Draaien mislukt: {e}")
+    
+    def test_combined_movement(self, robot):
+        """Test gecombineerde beweging"""
+        try:
+            robot.stand()
+            time.sleep(1)
+            
+            result = robot.move(vx=0.2, vy=0.1, vyaw=0.2)
+            print(f"✓ Gecombineerde beweging: {result}")
+            time.sleep(2)
+            
+            robot.stop()
+            time.sleep(1)
+            assert result is not None
+        except Go2CommandError as e:
+            pytest.fail(f"Gecombineerde beweging mislukt: {e}")
+

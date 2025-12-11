@@ -3,7 +3,6 @@
 First Time Setup Test voor Go2 Robot
 
 Test script voor eerste keer gebruik - checkt alles en test robot verbinding.
-Gebruikt de officiële SDK.
 """
 
 import sys
@@ -39,29 +38,29 @@ def test_imports():
     
     results = []
     
-    # Test Go2Robot
+    # Test custom wrapper
     try:
-        from src.unitree_go2 import Go2Robot, Go2ConnectionError, Go2CommandError, Go2TimeoutError
-        results.append(check_mark(True, "Go2Robot import succesvol"))
+        from src.unitree_go2 import Go2Robot, Go2ConnectionError, Go2CommandError
+        results.append(check_mark(True, "Custom wrapper (Go2Robot) import"))
     except ImportError as e:
-        results.append(check_mark(False, f"Go2Robot import mislukt: {e}"))
+        results.append(check_mark(False, f"Custom wrapper import: {e}"))
     
-    # Test HAS_OFFICIAL_SDK
+    # Test officiële SDK
     try:
-        from src.unitree_go2 import HAS_OFFICIAL_SDK
+        from src.unitree_go2 import HAS_OFFICIAL_SDK, Go2RobotOfficial
         if HAS_OFFICIAL_SDK:
-            results.append(check_mark(True, "Officiële SDK (CycloneDDS) beschikbaar"))
+            results.append(check_mark(True, "Officiële SDK (Go2RobotOfficial) beschikbaar"))
         else:
-            results.append(check_mark(False, "Officiële SDK niet beschikbaar - check CYCLONEDDS_HOME"))
+            results.append(check_mark(False, "Officiële SDK niet beschikbaar (check CYCLONEDDS_HOME)"))
     except ImportError as e:
-        results.append(check_mark(False, f"SDK check mislukt: {e}"))
+        results.append(check_mark(False, f"Officiële SDK import: {e}"))
     
     # Test andere modules
     try:
-        from src.unitree_go2 import FlowExecutor
-        results.append(check_mark(True, "FlowExecutor module beschikbaar"))
+        from src.unitree_go2 import FlowExecutor, WebSearcher
+        results.append(check_mark(True, "Flow executor en web search modules"))
     except ImportError as e:
-        results.append(check_mark(False, f"FlowExecutor import: {e}"))
+        results.append(check_mark(False, f"Extra modules import: {e}"))
     
     return all(results)
 
@@ -74,13 +73,15 @@ def test_python_version():
     python_version = sys.version_info
     version_str = f"{python_version.major}.{python_version.minor}.{python_version.micro}"
     
+    # Check versie
     if python_version.major == 3 and 8 <= python_version.minor <= 12:
         results.append(check_mark(True, f"Python versie OK: {version_str}"))
-    elif python_version.major == 3 and python_version.minor >= 13:
-        results.append(check_mark(False, f"Python versie {version_str} mogelijk niet compatibel met cyclonedds"))
-        print("  ⚠️  Python 3.13+ kan compatibiliteitsproblemen hebben met cyclonedds")
-        print("  💡 Tip: Gebruik Python 3.12:")
-        print("     python3.12 -m venv venv && source venv/bin/activate")
+    elif python_version.major == 3 and python_version.minor == 14:
+        results.append(check_mark(False, f"Python versie {version_str} niet compatibel met cyclonedds"))
+        print("  ⚠️  Python 3.14 heeft compatibiliteitsproblemen met cyclonedds 0.10.2")
+        print("  💡 Tip: Gebruik Python 3.12 of 3.11")
+        print("     python3.12 -m venv venv")
+        print("     source venv/bin/activate")
     else:
         results.append(check_mark(False, f"Python versie {version_str} mogelijk niet compatibel"))
         print("  💡 Tip: Gebruik Python 3.8-3.12 voor beste compatibiliteit")
@@ -93,6 +94,17 @@ def test_cyclonedds():
     
     results = []
     
+    # Check Python versie eerst
+    python_version = sys.version_info
+    if python_version.major == 3 and python_version.minor == 14:
+        results.append(check_mark(False, "Python 3.14 niet compatibel met cyclonedds"))
+        print("  ⚠️  cyclonedds 0.10.2 werkt niet met Python 3.14")
+        print("  💡 Oplossing: Gebruik Python 3.12")
+        print("     1. Maak nieuwe venv: python3.12 -m venv venv")
+        print("     2. Activeer: source venv/bin/activate")
+        print("     3. Installeer: pip install cyclonedds==0.10.2")
+        return False
+    
     # Check CYCLONEDDS_HOME
     cyclonedds_home = os.getenv("CYCLONEDDS_HOME")
     if cyclonedds_home:
@@ -102,19 +114,28 @@ def test_cyclonedds():
         if Path(cyclonedds_home).exists():
             results.append(check_mark(True, f"CycloneDDS directory bestaat"))
         else:
-            results.append(check_mark(False, f"CycloneDDS directory niet gevonden"))
+            results.append(check_mark(False, f"CycloneDDS directory niet gevonden: {cyclonedds_home}"))
     else:
         results.append(check_mark(False, "CYCLONEDDS_HOME niet gezet"))
-        print("  💡 Tip: ./install_cyclonedds_macos.sh")
-        print("     of: export CYCLONEDDS_HOME=\"$HOME/cyclonedds/install\"")
+        print("  💡 Tip: export CYCLONEDDS_HOME=\"/Users/marc/cyclonedds/install\"")
     
     # Test cyclonedds import
     try:
         import cyclonedds
-        results.append(check_mark(True, "cyclonedds Python package geïnstalleerd"))
+        # cyclonedds heeft geen __version__, maar we kunnen checken of het werkt
+        try:
+            version = getattr(cyclonedds, '__version__', 'geïnstalleerd')
+            if version == 'geïnstalleerd':
+                results.append(check_mark(True, "cyclonedds Python package geïnstalleerd"))
+            else:
+                results.append(check_mark(True, f"cyclonedds Python package geïnstalleerd (versie: {version})"))
+        except AttributeError:
+            results.append(check_mark(True, "cyclonedds Python package geïnstalleerd"))
     except ImportError:
         results.append(check_mark(False, "cyclonedds Python package niet geïnstalleerd"))
-        print("  💡 Tip: pip install cyclonedds==0.10.2")
+        print("  💡 Tip: pip install cyclonedds==0.10.2 (na CYCLONEDDS_HOME te zetten)")
+        if python_version.major == 3 and python_version.minor == 14:
+            print("  ⚠️  Maar eerst: gebruik Python 3.12!")
     
     return all(results)
 
@@ -123,12 +144,24 @@ def test_network_connection(ip_address="192.168.123.161"):
     print_section(f"Test Netwerk Verbinding ({ip_address})")
     
     import socket
-    import subprocess
     
     results = []
     
-    # Ping test
+    # Ping test (simpele socket connect)
     try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.settimeout(2.0)
+        # UDP heeft geen connect, maar we kunnen proberen te senden
+        sock.sendto(b"test", (ip_address, 8080))
+        sock.close()
+        results.append(check_mark(True, f"Socket test naar {ip_address}:8080"))
+    except Exception as e:
+        results.append(check_mark(False, f"Socket test mislukt: {e}"))
+    
+    # Check of IP bereikbaar is (ping via subprocess)
+    import subprocess
+    try:
+        # macOS/Linux ping
         result = subprocess.run(
             ["ping", "-c", "1", "-W", "2000", ip_address],
             capture_output=True,
@@ -144,37 +177,23 @@ def test_network_connection(ip_address="192.168.123.161"):
     
     return all(results)
 
-def test_robot_connection(ip_address="192.168.123.161", network_interface=None):
-    """Test robot verbinding via officiële SDK"""
-    print_section("Test Robot Verbinding")
+def test_custom_wrapper(ip_address="192.168.123.161"):
+    """Test custom wrapper verbinding"""
+    print_section("Test Custom Wrapper (Go2Robot)")
     
     try:
-        from src.unitree_go2 import Go2Robot, Go2ConnectionError, HAS_OFFICIAL_SDK
+        from src.unitree_go2 import Go2Robot, Go2ConnectionError
         
-        if not HAS_OFFICIAL_SDK:
-            check_mark(False, "Officiële SDK niet beschikbaar")
-            print("  💡 Tip: Installeer CycloneDDS eerst")
-            return False
+        robot = Go2Robot(ip_address=ip_address)
         
-        # Detecteer netwerk interface als niet opgegeven
-        if not network_interface:
-            import platform
-            network_interface = "en0" if platform.system() == "Darwin" else "eth0"
-        
-        print(f"  📡 Netwerk interface: {network_interface}")
-        
-        robot = Go2Robot(
-            ip_address=ip_address,
-            network_interface=network_interface
-        )
-        
+        # Test connect
         try:
             robot.connect()
             check_mark(True, "Verbinding succesvol")
             
             # Test stand
             print("  ⏳ Test stand commando...")
-            robot.stand()
+            result = robot.stand()
             check_mark(True, "Stand commando verstuurd")
             time.sleep(1.0)
             
@@ -190,6 +209,60 @@ def test_robot_connection(ip_address="192.168.123.161", network_interface=None):
             return False
         except Exception as e:
             check_mark(False, f"Fout: {e}")
+            return False
+            
+    except ImportError:
+        check_mark(False, "Custom wrapper niet beschikbaar")
+        return False
+
+def test_official_sdk(ip_address="192.168.123.161", network_interface=None):
+    """Test officiële SDK verbinding"""
+    print_section("Test Officiële SDK (Go2RobotOfficial)")
+    
+    try:
+        from src.unitree_go2 import HAS_OFFICIAL_SDK, Go2RobotOfficial
+        
+        if not HAS_OFFICIAL_SDK:
+            check_mark(False, "Officiële SDK niet beschikbaar")
+            print("  💡 Tip: Zorg dat CYCLONEDDS_HOME gezet is en cyclonedds geïnstalleerd")
+            return False
+        
+        # Detecteer netwerk interface als niet opgegeven
+        if not network_interface:
+            import platform
+            if platform.system() == "Darwin":  # macOS
+                network_interface = "en0"  # Standaard WiFi
+            else:
+                network_interface = "eth0"
+        
+        print(f"  📡 Netwerk interface: {network_interface}")
+        
+        robot = Go2RobotOfficial(
+            ip_address=ip_address,
+            network_interface=network_interface
+        )
+        
+        # Test connect
+        try:
+            robot.connect()
+            check_mark(True, "Verbinding succesvol via officiële SDK")
+            
+            # Test stand
+            print("  ⏳ Test stand commando...")
+            result = robot.stand()
+            check_mark(True, "Stand commando verstuurd")
+            time.sleep(1.0)
+            
+            # Test stop
+            robot.stop()
+            check_mark(True, "Stop commando verstuurd")
+            
+            robot.disconnect()
+            return True
+            
+        except Exception as e:
+            check_mark(False, f"Fout: {e}")
+            print(f"  💡 Tip: Check netwerk interface naam (gebruik: --interface)")
             return False
             
     except ImportError as e:
@@ -223,32 +296,30 @@ def main():
     args = parser.parse_args()
     
     print_header("Go2 Robot - First Time Setup Test")
-    print("\nDit script test of alles correct is geïnstalleerd.")
-    print("Gebruikt de officiële Unitree SDK.\n")
+    print("\nDit script test of alles correct is geïnstalleerd en geconfigureerd.")
+    print("Gebruik dit script wanneer je de robot voor het eerst aanzet.\n")
     
     # Test 1: Python versie
     python_ok = test_python_version()
     
-    # Test 2: CycloneDDS
-    cyclonedds_ok = test_cyclonedds()
-    
-    # Test 3: Imports
+    # Test 2: Imports
     imports_ok = test_imports()
     
-    # Test 4: Netwerk verbinding
-    network_ok = False
-    if not args.skip_robot:
-        network_ok = test_network_connection(args.ip)
+    # Test 3: CycloneDDS
+    cyclonedds_ok = test_cyclonedds()
     
-    # Test 5: Robot verbinding
-    robot_ok = False
-    if network_ok and cyclonedds_ok and not args.skip_robot:
+    # Test 4: Netwerk verbinding
+    network_ok = test_network_connection(args.ip)
+    
+    # Test 5: Custom wrapper (als netwerk OK)
+    custom_wrapper_ok = False
+    if network_ok and not args.skip_robot:
         print("\n⚠️  Let op: Robot tests zullen commando's naar de robot sturen!")
         print("Zorg dat de robot aan is en er voldoende ruimte is.")
         try:
             response = input("\nDoorgaan met robot tests? (y/n): ")
             if response.lower() == 'y':
-                robot_ok = test_robot_connection(args.ip, args.interface)
+                custom_wrapper_ok = test_custom_wrapper(args.ip)
             else:
                 print("  ⏭️  Robot tests overgeslagen")
         except KeyboardInterrupt:
@@ -256,34 +327,78 @@ def main():
     elif args.skip_robot:
         print("\n  ⏭️  Robot tests overgeslagen (--skip-robot flag)")
     
+    # Test 6: Officiële SDK (als CycloneDDS OK en netwerk OK)
+    official_sdk_ok = False
+    if cyclonedds_ok and network_ok and not args.skip_robot:
+        try:
+            response = input("\nTest officiële SDK? (y/n): ")
+            if response.lower() == 'y':
+                official_sdk_ok = test_official_sdk(args.ip, args.interface)
+            else:
+                print("  ⏭️  Officiële SDK test overgeslagen")
+        except KeyboardInterrupt:
+            print("\n  ⏭️  Officiële SDK test overgeslagen")
+    elif args.skip_robot:
+        print("\n  ⏭️  Officiële SDK test overgeslagen (--skip-robot flag)")
+    
     # Samenvatting
     print_header("Test Samenvatting")
     
     print("\n📋 Resultaten:")
-    print(f"  {'✓' if python_ok else '❌'} Python Versie")
-    print(f"  {'✓' if cyclonedds_ok else '❌'} CycloneDDS")
-    print(f"  {'✓' if imports_ok else '❌'} Imports")
+    print(f"  {'✓' if python_ok else '❌'} Python Versie: {'OK' if python_ok else 'FAAL'}")
+    print(f"  {'✓' if imports_ok else '❌'} Imports: {'OK' if imports_ok else 'FAAL'}")
+    print(f"  {'✓' if cyclonedds_ok else '❌'} CycloneDDS: {'OK' if cyclonedds_ok else 'FAAL'}")
+    print(f"  {'✓' if network_ok else '❌'} Netwerk: {'OK' if network_ok else 'FAAL'}")
     if not args.skip_robot:
-        print(f"  {'✓' if network_ok else '❌'} Netwerk")
-        print(f"  {'✓' if robot_ok else '❌'} Robot Verbinding")
+        print(f"  {'✓' if custom_wrapper_ok else '❌'} Custom Wrapper: {'OK' if custom_wrapper_ok else 'FAAL'}")
+        print(f"  {'✓' if official_sdk_ok else '❌'} Officiële SDK: {'OK' if official_sdk_ok else 'FAAL'}")
     
     # Aanbevelingen
-    if not (python_ok and cyclonedds_ok and imports_ok):
-        print("\n💡 Aanbevelingen:")
-        
-        if not python_ok:
-            print("  - Gebruik Python 3.12: python3.12 -m venv venv")
-        
-        if not cyclonedds_ok:
+    print("\n💡 Aanbevelingen:")
+    
+    python_version = sys.version_info
+    
+    if not python_ok:
+        print("  - Python versie probleem gedetecteerd")
+        print("  - Gebruik Python 3.12 voor beste compatibiliteit:")
+        print("    python3.12 -m venv venv")
+        print("    source venv/bin/activate")
+        print("    pip install -r requirements.txt")
+        print("    Of gebruik: ./setup_venv_python312.sh")
+    
+    if not imports_ok:
+        print("  - Check of alle dependencies geïnstalleerd zijn")
+        print("  - Run: pip install -r requirements.txt")
+    
+    if not cyclonedds_ok:
+        if python_version.major == 3 and python_version.minor == 14:
+            print("  - ⚠️  Python 3.14 niet compatibel met cyclonedds!")
+            print("  - Gebruik eerst Python 3.12 (zie boven)")
+            print("  - Of gebruik: ./setup_venv_python312.sh")
+        else:
             print("  - Installeer CycloneDDS: ./install_cyclonedds_macos.sh")
-        
-        if not imports_ok:
-            print("  - Check dependencies: pip install -r requirements.txt")
+            print("  - Of export CYCLONEDDS_HOME handmatig")
+    
+    if not network_ok:
+        print("  - Check of robot aan is")
+        print("  - Check IP adres (standaard: 192.168.123.161)")
+        print("  - Check netwerk verbinding")
+        print("  - Check firewall instellingen")
+    
+    if not custom_wrapper_ok and network_ok:
+        print("  - Robot accepteert mogelijk geen commando's")
+        print("  - Check of robot EDU variant is")
+        print("  - Check ontwikkelaarsmodus")
+    
+    if not official_sdk_ok and cyclonedds_ok and network_ok:
+        print("  - Check netwerk interface naam")
+        print("  - Probeer: --interface en0 (macOS) of eth0 (Linux)")
+        print("  - Check DDS communicatie")
     
     # Eindresultaat
-    all_tests = [python_ok, cyclonedds_ok, imports_ok]
+    all_tests = [python_ok, imports_ok, cyclonedds_ok, network_ok]
     if not args.skip_robot:
-        all_tests.extend([network_ok, robot_ok])
+        all_tests.extend([custom_wrapper_ok, official_sdk_ok])
     
     if all(all_tests):
         print("\n" + "=" * 70)
@@ -293,10 +408,11 @@ def main():
         return 0
     else:
         print("\n" + "=" * 70)
-        print("  ⚠️  SOMMIGE TESTS MISLUKT")
+        print("  ⚠️  SOMIGE TESTS MISLUKT")
         print("=" * 70)
         print("\nLos de bovenstaande problemen op voordat je verder gaat.")
         return 1
 
 if __name__ == "__main__":
     exit(main())
+
