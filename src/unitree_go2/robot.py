@@ -1,37 +1,115 @@
 """
 Unitree Go2 EDU Robot Interface
 
-Basis implementatie voor communicatie met de Go2 EDU robot.
+Wrapper rondom de officiële unitree_sdk2_python SDK.
 """
 
-import socket
-import json
-import time
+import sys
+from pathlib import Path
 from typing import Optional, Dict, Any
+import time
+
+# Voeg officiële SDK toe aan path
+sdk_path = Path(__file__).parent.parent.parent.parent / "unitree_sdk2_python"
+if sdk_path.exists():
+    sys.path.insert(0, str(sdk_path))
+
+try:
+    from unitree_sdk2py.go2.sport.sport_client import SportClient
+    from unitree_sdk2py.go2.robot_state.robot_state_client import RobotStateClient
+    from unitree_sdk2py.core.channel import ChannelFactoryInitialize
+    HAS_OFFICIAL_SDK = True
+except ImportError as e:
+    HAS_OFFICIAL_SDK = False
+    _import_error = str(e)
+
 from .exceptions import Go2ConnectionError, Go2CommandError, Go2TimeoutError
 
 
 class Go2Robot:
-    """Hoofdklasse voor interactie met Unitree Go2 EDU robot"""
+    """
+    Hoofdklasse voor interactie met Unitree Go2 EDU robot.
     
-    def __init__(self, ip_address: str = "192.168.123.161", port: int = 8080, timeout: float = 5.0):
+    Gebruikt de officiële unitree_sdk2_python SDK voor communicatie.
+    """
+    
+    def __init__(self, ip_address: str = "192.168.123.161", timeout: float = 5.0, network_interface: Optional[str] = None):
         """
         Initialiseer Go2 robot verbinding
         
         Args:
             ip_address: IP adres van de robot
-            port: Poort voor SDK communicatie
             timeout: Timeout in seconden
+            network_interface: Netwerk interface naam (bijv. "en0", "eth0")
+                              Als None, wordt automatisch gedetecteerd
         """
+        if not HAS_OFFICIAL_SDK:
+            raise ImportError(
+                f"Officiële SDK niet gevonden. Installeer CycloneDDS en unitree_sdk2_python.\n"
+                f"Zie docs/OFFICIELE_SDK_INTEGRATIE.md voor instructies.\n"
+                f"Fout: {_import_error if '_import_error' in dir() else 'Unknown'}"
+            )
+        
         self.ip_address = ip_address
-        self.port = port
         self.timeout = timeout
-        self.socket: Optional[socket.socket] = None
+        self.network_interface = network_interface or self._detect_network_interface()
+        
+        # SDK clients
+        self.sport_client: Optional[SportClient] = None
+        self.robot_state_client: Optional[RobotStateClient] = None
+        
         self.connected = False
+    
+    def _detect_network_interface(self) -> str:
+        """
+        Detecteer netwerk interface automatisch
+        
+        Returns:
+            Interface naam (bijv. "en0", "eth0")
+        """
+        import platform
+        import subprocess
+        
+        system = platform.system()
+        
+        if system == "Darwin":  # macOS
+            # Probeer WiFi interface
+            try:
+                result = subprocess.run(
+                    ["route", "get", "default"],
+                    capture_output=True,
+                    text=True
+                )
+                for line in result.stdout.split('\n'):
+                    if 'interface:' in line:
+                        return line.split(':')[1].strip()
+            except:
+                pass
+            return "en0"  # Fallback voor macOS
+        elif system == "Linux":
+            # Probeer eerste actieve interface
+            try:
+                result = subprocess.run(
+                    ["ip", "route", "get", "8.8.8.8"],
+                    capture_output=True,
+                    text=True
+                )
+                for line in result.stdout.split('\n'):
+                    if 'dev' in line:
+                        parts = line.split()
+                        if 'dev' in parts:
+                            idx = parts.index('dev')
+                            if idx + 1 < len(parts):
+                                return parts[idx + 1]
+            except:
+                pass
+            return "eth0"  # Fallback voor Linux
+        else:
+            return "eth0"  # Fallback
     
     def connect(self) -> bool:
         """
-        Maak verbinding met de robot
+        Maak verbinding met de robot via officiële SDK
         
         Returns:
             True als verbinding succesvol is
@@ -40,90 +118,107 @@ class Go2Robot:
             Go2ConnectionError: Als verbinding mislukt
         """
         try:
-            self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self.socket.settimeout(self.timeout)
+            # Initialiseer DDS channel factory met netwerk interface
+            ChannelFactoryInitialize(0, self.network_interface)
+            
+            # Initialiseer sport client (voor beweging)
+            self.sport_client = SportClient()
+            self.sport_client.SetTimeout(self.timeout)
+            self.sport_client.Init()
+            
+            # Initialiseer robot state client (voor sensor data)
+            self.robot_state_client = RobotStateClient()
+            self.robot_state_client.SetTimeout(self.timeout)
+            self.robot_state_client.Init()
+            
             self.connected = True
+            print(f"✓ Verbonden via officiële SDK (interface: {self.network_interface})")
             return True
+            
         except Exception as e:
             self.connected = False
-            raise Go2ConnectionError(f"Kon niet verbinden met robot: {e}")
+            raise Go2ConnectionError(f"Kon niet verbinden met robot via officiële SDK: {e}")
     
     def disconnect(self):
         """Verbreek verbinding met de robot"""
-        if self.socket:
-            self.socket.close()
-            self.socket = None
+        if self.sport_client:
+            # Officiële SDK heeft geen expliciete disconnect
+            self.sport_client = None
+        
+        if self.robot_state_client:
+            self.robot_state_client = None
+        
         self.connected = False
     
-    def send_command(self, command: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Verstuur commando naar robot
-        
-        Args:
-            command: Commando dictionary
-            
-        Returns:
-            Antwoord van de robot
-            
-        Raises:
-            Go2CommandError: Als commando mislukt
-            Go2TimeoutError: Als timeout optreedt
-        """
+    def stand(self):
+        """Laat robot rechtop staan"""
         if not self.connected:
             raise Go2ConnectionError("Niet verbonden met robot")
         
         try:
-            # Converteer commando naar JSON
-            message = json.dumps(command).encode('utf-8')
+            # Gebruik officiële SDK StandUp methode
+            code = self.sport_client.StandUp()
+            if code != 0:
+                raise Go2CommandError(f"Stand commando mislukt met code: {code}")
             
-            # Verstuur naar robot
-            self.socket.sendto(message, (self.ip_address, self.port))
+            return {"status": "ok", "message": "Stand command sent", "code": code}
             
-            # Wacht op antwoord (indien nodig)
-            # Let op: Dit is een basis implementatie, aanpassen naar echte SDK protocol
-            return {"status": "ok", "message": "Command sent"}
-            
-        except socket.timeout:
-            raise Go2TimeoutError("Timeout bij versturen commando")
         except Exception as e:
-            raise Go2CommandError(f"Fout bij versturen commando: {e}")
-    
-    def stand(self):
-        """Laat robot rechtop staan"""
-        command = {
-            "command": "stand",
-            "mode": "stand"
-        }
-        return self.send_command(command)
+            raise Go2CommandError(f"Fout bij stand commando: {e}")
     
     def sit(self):
         """Laat robot zitten"""
-        command = {
-            "command": "sit",
-            "mode": "sit"
-        }
-        return self.send_command(command)
+        if not self.connected:
+            raise Go2ConnectionError("Niet verbonden met robot")
+        
+        try:
+            # Gebruik officiële SDK StandDown methode
+            code = self.sport_client.StandDown()
+            if code != 0:
+                raise Go2CommandError(f"Sit commando mislukt met code: {code}")
+            
+            return {"status": "ok", "message": "Sit command sent", "code": code}
+            
+        except Exception as e:
+            raise Go2CommandError(f"Fout bij sit commando: {e}")
     
     def move(self, vx: float = 0.0, vy: float = 0.0, vyaw: float = 0.0):
         """
-        Beweeg robot
+        Beweeg robot met opgegeven snelheden
         
         Args:
             vx: Snelheid vooruit/achteruit (m/s)
             vy: Snelheid links/rechts (m/s)
             vyaw: Draaisnelheid (rad/s)
         """
-        command = {
-            "command": "move",
-            "vx": vx,
-            "vy": vy,
-            "vyaw": vyaw
-        }
-        return self.send_command(command)
+        if not self.connected:
+            raise Go2ConnectionError("Niet verbonden met robot")
+        
+        try:
+            # Gebruik officiële SDK Move methode
+            code = self.sport_client.Move(vx, vy, vyaw)
+            if code != 0:
+                raise Go2CommandError(f"Move commando mislukt met code: {code}")
+            
+            return {"status": "ok", "message": "Move command sent", "code": code}
+            
+        except Exception as e:
+            raise Go2CommandError(f"Fout bij move commando: {e}")
     
     def stop(self):
         """Stop alle beweging"""
-        return self.move(0.0, 0.0, 0.0)
+        if not self.connected:
+            raise Go2ConnectionError("Niet verbonden met robot")
+        
+        try:
+            # Gebruik officiële SDK StopMove methode
+            code = self.sport_client.StopMove()
+            if code != 0:
+                raise Go2CommandError(f"Stop commando mislukt met code: {code}")
+            
+            return {"status": "ok", "message": "Stop command sent", "code": code}
+        except Exception as e:
+            raise Go2CommandError(f"Fout bij stop commando: {e}")
     
     def get_state(self) -> Dict[str, Any]:
         """
@@ -131,11 +226,34 @@ class Go2Robot:
         
         Returns:
             Dictionary met robot status informatie
+            
+        Note: Officiële SDK gebruikt subscription model voor state.
+        Deze implementatie is een vereenvoudigde versie.
         """
-        command = {
-            "command": "get_state"
-        }
-        return self.send_command(command)
+        if not self.connected:
+            raise Go2ConnectionError("Niet verbonden met robot")
+        
+        try:
+            # Officiële SDK gebruikt subscription model voor robot state
+            # Voor nu retourneren we een basis state structuur
+            # Voor volledige state, gebruik RobotStateClient subscription
+            
+            result = {
+                "battery_level": 0,  # Vereist subscription om te lezen
+                "base_position": [0.0, 0.0, 0.0],
+                "base_orientation": [1.0, 0.0, 0.0, 0.0],
+                "base_linear_velocity": [0.0, 0.0, 0.0],
+                "base_angular_velocity": [0.0, 0.0, 0.0],
+                "joint_positions": {},
+                "joint_velocities": {},
+                "imu_data": {},
+                "note": "Gebruik RobotStateClient subscription voor volledige state"
+            }
+            
+            return result
+            
+        except Exception as e:
+            raise Go2CommandError(f"Fout bij ophalen state: {e}")
     
     def __enter__(self):
         """Context manager entry"""

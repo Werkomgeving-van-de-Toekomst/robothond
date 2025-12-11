@@ -1,11 +1,11 @@
 """
-Unitree Go2 EDU SDK Wrapper
+Unitree Go2 EDU SDK
 
-Een Python wrapper voor de Unitree Go2 EDU robot API.
+Python wrapper voor de Unitree Go2 EDU robot, gebaseerd op de officiële SDK.
 """
 
-from .robot import Go2Robot
-from .exceptions import Go2ConnectionError, Go2CommandError
+from .robot import Go2Robot, HAS_OFFICIAL_SDK
+from .exceptions import Go2ConnectionError, Go2CommandError, Go2TimeoutError
 from .config import load_config
 from .flow_executor import FlowExecutor, FlowAction, ActionType, create_welcome_flow
 
@@ -17,19 +17,16 @@ except ImportError:
     HAS_WEB_SEARCH = False
     WebSearcher = None
 
-# Probeer officiële SDK wrapper te importeren
-try:
-    from .robot_official import Go2RobotOfficial
-    HAS_OFFICIAL_SDK = True
-except ImportError:
-    HAS_OFFICIAL_SDK = False
-    Go2RobotOfficial = None
+# Backwards compatibility alias
+Go2RobotOfficial = Go2Robot
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __all__ = [
     "Go2Robot",
+    "Go2RobotOfficial",  # Backwards compatibility
     "Go2ConnectionError",
     "Go2CommandError",
+    "Go2TimeoutError",
     "load_config",
     "FlowExecutor",
     "FlowAction",
@@ -40,7 +37,4 @@ __all__ = [
 
 if HAS_WEB_SEARCH:
     __all__.append("WebSearcher")
-
-if HAS_OFFICIAL_SDK:
-    __all__.append("Go2RobotOfficial")
 

@@ -1,142 +1,123 @@
 # Unitree Go2 EDU Development Project
 
-Ontwikkelproject voor de Unitree Go2 EDU robot.
+Ontwikkelproject voor de Unitree Go2 EDU robot, gebaseerd op de officiële SDK.
 
 ## Vereisten
 
-- Python 3.8 of hoger
+- Python 3.8-3.12 (3.12 aanbevolen)
+- CycloneDDS (voor officiële SDK)
 - Netwerkverbinding met de Go2 EDU robot
 - Unitree Go2 EDU robot met ontwikkelaarsmodus ingeschakeld
 
 ## Installatie
 
-1. Clone dit repository of download de bestanden
+### Stap 1: Clone repository
 
-2. Maak een virtual environment aan (aanbevolen):
 ```bash
-python3 -m venv venv
-source venv/bin/activate  # Op macOS/Linux
-# of: venv\Scripts\activate  # Op Windows
+git clone <repository-url>
+cd unitreego2
 ```
 
-3. Installeer de benodigde dependencies:
+### Stap 2: Maak virtual environment
+
+```bash
+# Gebruik Python 3.12 voor beste compatibiliteit
+python3.12 -m venv venv
+source venv/bin/activate
+```
+
+### Stap 3: Installeer CycloneDDS
+
+```bash
+# Automatisch (aanbevolen)
+./install_cyclonedds_macos.sh
+
+# Of handmatig - zie docs/OFFICIELE_SDK_INTEGRATIE.md
+```
+
+### Stap 4: Installeer dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Configureer de verbinding met je robot in `config/robot_config.yaml`
+### Stap 5: Test setup
 
-## Projectstructuur
-
-```
-unitreego2/
-├── src/                    # Hoofdcode
-│   ├── unitree_go2/       # Unitree Go2 SDK wrapper
-│   └── examples/          # Voorbeeldscripts
-├── config/                # Configuratiebestanden
-├── tests/                 # Unit tests
-│   ├── test_connection.py    # Verbinding tests
-│   ├── test_commands.py      # Commando tests
-│   ├── test_sensors.py       # Sensor tests
-│   ├── test_error_handling.py # Error handling tests
-│   └── test_performance.py   # Performance tests
-├── urdf/                  # URDF robot beschrijving bestanden
-│   ├── urdf/              # URDF/Xacro bestanden
-│   ├── meshes/            # 3D mesh bestanden
-│   └── config/            # ROS configuratie
-├── src/
-│   └── simulation/        # PyBullet simulatie code
-│       └── go2_simulator.py
-├── docs/                  # Documentatie
-├── run_tests.py           # Test runner script
-├── auto_test.py           # Automatisch test script
-└── requirements.txt       # Python dependencies
+```bash
+python src/examples/first_time_setup_test.py --skip-robot
 ```
 
 ## Gebruik
-
-### Eerste keer opzetten
-
-1. **Diagnostiek uitvoeren** (aanbevolen als eerste stap):
-```bash
-python src/examples/diagnostics.py -i 192.168.123.161
-```
-
-2. **Automatisch testen** (aanbevolen - wacht op robot en voert tests uit):
-```bash
-# Wacht op robot en voer alle tests uit
-python auto_test.py
-
-# Met custom IP adres
-python auto_test.py -i 192.168.123.161
-
-# Continue modus (herhaalt tests elke minuut)
-python auto_test.py --continuous
-```
-
-3. **Handmatig tests uitvoeren**:
-```bash
-# Alle tests
-python run_tests.py
-
-# Specifieke test categorie
-python run_tests.py -c connection -c commands
-
-# Met custom IP adres
-python run_tests.py -i 192.168.123.161
-
-# Verbose output
-python run_tests.py -v
-```
 
 ### Basis verbinding
 
 ```python
 from src.unitree_go2 import Go2Robot
 
-robot = Go2Robot(ip_address="192.168.123.161")
-robot.connect()
+# Verbind met robot (officiële SDK)
+with Go2Robot(
+    ip_address="192.168.123.161",
+    network_interface="en0"  # macOS WiFi, of "eth0" voor Linux
+) as robot:
+    robot.stand()
+    robot.move(vx=0.3, vy=0.0, vyaw=0.0)
+    time.sleep(2)
+    robot.stop()
+    robot.sit()
 ```
 
 ### Voorbeelden uitvoeren
 
 ```bash
-# Basis beweging
-python src/examples/basic_movement.py
+# First time setup test
+python src/examples/first_time_setup_test.py
 
-# Sensor data lezen
-python src/examples/read_sensors.py
+# Basis beweging
+python src/examples/basic_movement.py -i 192.168.123.161 --interface en0
 
 # Diagnostiek
-python src/examples/diagnostics.py
+python src/examples/diagnostics.py -i 192.168.123.161 --interface en0
 
-# PyBullet simulatie
-python src/examples/pybullet_simulation.py basic
-python src/examples/pybullet_simulation.py movement
-python src/examples/pybullet_simulation.py sensor
+# Voice control
+python src/examples/voice_control.py --robot-ip 192.168.123.161
 ```
 
-## PyBullet Simulatie
-
-Voor PyBullet simulatie gebruiken we Conda (werkt op macOS ARM64):
+### Automatisch testen
 
 ```bash
-# Activeer conda environment
-conda activate pybullet
+# Wacht op robot en voer tests uit
+python auto_test.py -i 192.168.123.161 --interface en0
 
-# Voer simulatie uit
-python src/examples/pybullet_simulation.py basic
-python src/examples/pybullet_simulation.py movement
-python src/examples/pybullet_simulation.py sensor
+# Continue modus
+python auto_test.py --continuous
 ```
 
-Zie `SETUP_PYBULLET.md` voor gedetailleerde instructies.
+## Projectstructuur
+
+```
+unitreego2/
+├── src/
+│   ├── unitree_go2/       # SDK wrapper (officiële SDK)
+│   ├── examples/          # Voorbeeldscripts
+│   ├── voice/             # Voice control
+│   └── simulation/        # PyBullet simulatie
+├── docs/                  # Documentatie
+├── tests/                 # Unit tests
+├── config/                # Configuratie
+├── flows/                 # Robot actie flows
+└── unitree_sdk2_python/   # Officiële SDK
+```
 
 ## Documentatie
 
-Voor volledige API documentatie, zie: https://support.unitree.com/home/en/developer
+Zie de `docs/` folder voor gedetailleerde documentatie:
+
+- [First Time Setup](docs/FIRST_TIME_SETUP.md)
+- [Officiële SDK Integratie](docs/OFFICIELE_SDK_INTEGRATIE.md)
+- [Netwerk Verbinding](docs/NETWERK_OVERZICHT.md)
+- [Voice Control](docs/VOICE_CONTROL.md)
+- [Alle documentatie](docs/README.md)
 
 ## Licentie
 
 Dit project is voor educatieve doeleinden.
-

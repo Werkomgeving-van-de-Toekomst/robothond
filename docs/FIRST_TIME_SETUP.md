@@ -1,25 +1,24 @@
 # First Time Setup Guide voor Go2 Robot
 
-Complete guide voor eerste keer gebruik van de Go2 robot.
+Complete guide voor eerste keer gebruik van de Go2 robot met de officiële SDK.
 
 ## Overzicht
 
-Dit guide helpt je bij het opzetten van je Go2 robot voor de eerste keer. We testen alles stap voor stap om te zorgen dat alles werkt.
+Dit guide helpt je bij het opzetten van je Go2 robot voor de eerste keer. We gebruiken de officiële Unitree SDK.
 
 ## Snel Starten
 
 ### Stap 1: Run Setup Test
 
 ```bash
-python src/examples/first_time_setup_test.py
+python src/examples/first_time_setup_test.py --skip-robot
 ```
 
 Dit script test:
-- ✅ Alle imports werken
+- ✅ Python versie compatibel (3.8-3.12)
 - ✅ CycloneDDS geïnstalleerd
+- ✅ Officiële SDK beschikbaar
 - ✅ Netwerk verbinding met robot
-- ✅ Custom wrapper werkt
-- ✅ Officiële SDK werkt
 
 ### Stap 2: Volg Aanbevelingen
 
@@ -29,13 +28,13 @@ Het script geeft aanbevelingen voor eventuele problemen.
 
 ### ⚠️ Belangrijk: Python Versie
 
-**CycloneDDS werkt niet met Python 3.14!** Gebruik Python 3.12 of 3.11.
+**Gebruik Python 3.12 of 3.11** voor beste compatibiliteit met CycloneDDS.
 
 ```bash
 # Check Python versie
 python --version
 
-# Als je Python 3.14 hebt, maak nieuwe venv met Python 3.12:
+# Maak nieuwe venv met Python 3.12:
 python3.12 -m venv venv
 source venv/bin/activate
 
@@ -43,17 +42,7 @@ source venv/bin/activate
 ./setup_venv_python312.sh
 ```
 
-### 1. Installeer Dependencies
-
-```bash
-# Activeer virtual environment
-source venv/bin/activate  # Of conda activate pybullet
-
-# Installeer basis dependencies
-pip install -r requirements.txt
-```
-
-### 2. Installeer CycloneDDS (voor officiële SDK)
+### 1. Installeer CycloneDDS
 
 ```bash
 # Automatisch (aanbevolen)
@@ -62,20 +51,24 @@ pip install -r requirements.txt
 # Of handmatig (zie docs/OFFICIELE_SDK_INTEGRATIE.md)
 ```
 
+### 2. Installeer Dependencies
+
+```bash
+# Activeer virtual environment
+source venv/bin/activate
+
+# Installeer dependencies
+pip install -r requirements.txt
+```
+
 ### 3. Test Setup
 
 ```bash
-# Volledige test
-python src/examples/first_time_setup_test.py
-
-# Zonder robot tests (alleen configuratie)
+# Zonder robot (alleen configuratie check)
 python src/examples/first_time_setup_test.py --skip-robot
 
-# Met custom IP
-python src/examples/first_time_setup_test.py -i 192.168.123.161
-
-# Met netwerk interface voor officiële SDK
-python src/examples/first_time_setup_test.py --interface en0
+# Met robot tests
+python src/examples/first_time_setup_test.py -i 192.168.123.161 --interface en0
 ```
 
 ## Test Script Opties
@@ -217,32 +210,20 @@ export CYCLONEDDS_HOME="/Users/marc/cyclonedds/install"
 
 Na succesvolle setup test:
 
-### Custom Wrapper
-
 ```python
+import time
 from src.unitree_go2 import Go2Robot
 
-with Go2Robot(ip_address="192.168.123.161") as robot:
-    robot.stand()
-    robot.move(vx=0.3, vy=0.0, vyaw=0.0)
-    time.sleep(2.0)
-    robot.stop()
-    robot.sit()
-```
-
-### Officiële SDK
-
-```python
-from src.unitree_go2 import Go2RobotOfficial
-
-with Go2RobotOfficial(
+# Verbind met robot (officiële SDK)
+with Go2Robot(
     ip_address="192.168.123.161",
-    network_interface="en0"
+    network_interface="en0"  # macOS WiFi, of "eth0" voor Linux
 ) as robot:
     robot.stand()
     robot.move(vx=0.3, vy=0.0, vyaw=0.0)
     time.sleep(2.0)
     robot.stop()
+    robot.sit()
 ```
 
 ## Checklist

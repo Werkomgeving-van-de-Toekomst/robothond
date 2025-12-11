@@ -3,12 +3,15 @@
 Diagnostiek script voor Unitree Go2 EDU
 
 Controleert de verbinding en basis functionaliteit van de robot.
+Gebruikt de officiële SDK.
 """
 
 import sys
 import os
 import time
 import socket
+import platform
+import subprocess
 
 # Voeg parent directory toe aan path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -16,29 +19,28 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 from src.unitree_go2 import Go2Robot, Go2ConnectionError, Go2CommandError
 
 
-def check_network_connectivity(ip_address, port=8080):
+def check_network_connectivity(ip_address):
     """Controleer of robot bereikbaar is via netwerk"""
-    print(f"🔍 Controleren netwerkverbinding naar {ip_address}:{port}...")
+    print(f"🔍 Controleren netwerkverbinding naar {ip_address}...")
     
     try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.settimeout(2)
-        sock.connect((ip_address, port))
-        sock.close()
-        print("✓ Netwerkverbinding OK")
-        return True
-    except socket.timeout:
-        print("✗ Timeout - robot niet bereikbaar")
-        return False
-    except socket.gaierror:
-        print("✗ DNS fout - ongeldig IP adres")
-        return False
+        result = subprocess.run(
+            ["ping", "-c", "1", "-W", "2000", ip_address],
+            capture_output=True,
+            timeout=3
+        )
+        if result.returncode == 0:
+            print("✓ Netwerkverbinding OK")
+            return True
+        else:
+            print("✗ Ping mislukt - robot niet bereikbaar")
+            return False
     except Exception as e:
         print(f"✗ Netwerkfout: {e}")
         return False
 
 
-def run_diagnostics(robot_ip="192.168.123.161"):
+def run_diagnostics(robot_ip="192.168.123.161", network_interface=None):
     """Voer volledige diagnostiek uit"""
     print("=" * 70)
     print("  Unitree Go2 EDU Diagnostiek")
@@ -59,8 +61,13 @@ def run_diagnostics(robot_ip="192.168.123.161"):
     # 2. SDK verbinding
     print("\n[2/5] SDK Verbinding")
     print("-" * 70)
+    
+    if not network_interface:
+        network_interface = "en0" if platform.system() == "Darwin" else "eth0"
+    print(f"  Netwerk interface: {network_interface}")
+    
     try:
-        robot = Go2Robot(ip_address=robot_ip)
+        robot = Go2Robot(ip_address=robot_ip, network_interface=network_interface)
         robot.connect()
         print("✓ SDK verbinding succesvol")
     except Go2ConnectionError as e:
@@ -164,11 +171,17 @@ def main():
         default="192.168.123.161",
         help='IP adres van de robot'
     )
+    parser.add_argument(
+        '--interface',
+        type=str,
+        default=None,
+        help='Netwerk interface naam (bijv. en0, eth0)'
+    )
     
     args = parser.parse_args()
     
     try:
-        success = run_diagnostics(robot_ip=args.ip)
+        success = run_diagnostics(robot_ip=args.ip, network_interface=args.interface)
         sys.exit(0 if success else 1)
     except KeyboardInterrupt:
         print("\n\n⚠️  Diagnostiek geannuleerd door gebruiker")
