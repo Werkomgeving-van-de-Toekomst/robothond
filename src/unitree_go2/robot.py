@@ -31,6 +31,7 @@ class Go2Robot:
     Hoofdklasse voor interactie met Unitree Go2 EDU robot.
     
     Gebruikt de officiële unitree_sdk2_python SDK voor communicatie.
+    Ondersteunt alle high-level sport commando's van de officiële SDK.
     """
     
     def __init__(self, ip_address: str = "192.168.123.161", timeout: float = 5.0, network_interface: Optional[str] = None):
@@ -150,37 +151,55 @@ class Go2Robot:
         
         self.connected = False
     
+    def _check_connection(self):
+        """Check of verbonden met robot"""
+        if not self.connected:
+            raise Go2ConnectionError("Niet verbonden met robot")
+    
+    def _execute_command(self, command_func, command_name: str, *args, **kwargs) -> Dict[str, Any]:
+        """
+        Voer een SDK commando uit met error handling
+        
+        Args:
+            command_func: De SDK functie om uit te voeren
+            command_name: Naam van het commando voor foutmeldingen
+            *args, **kwargs: Argumenten voor de functie
+            
+        Returns:
+            Dictionary met status en resultaat
+        """
+        self._check_connection()
+        try:
+            result = command_func(*args, **kwargs)
+            # Sommige functies retourneren een tuple (code, data)
+            if isinstance(result, tuple):
+                code, data = result
+                if code != 0:
+                    raise Go2CommandError(f"{command_name} mislukt met code: {code}")
+                return {"status": "ok", "message": f"{command_name} sent", "code": code, "data": data}
+            else:
+                code = result
+                if code != 0:
+                    raise Go2CommandError(f"{command_name} mislukt met code: {code}")
+                return {"status": "ok", "message": f"{command_name} sent", "code": code}
+        except Go2CommandError:
+            raise
+        except Exception as e:
+            raise Go2CommandError(f"Fout bij {command_name}: {e}")
+
+    # ==================== BASIS BEWEGING ====================
+    
     def stand(self):
         """Laat robot rechtop staan"""
-        if not self.connected:
-            raise Go2ConnectionError("Niet verbonden met robot")
-        
-        try:
-            # Gebruik officiële SDK StandUp methode
-            code = self.sport_client.StandUp()
-            if code != 0:
-                raise Go2CommandError(f"Stand commando mislukt met code: {code}")
-            
-            return {"status": "ok", "message": "Stand command sent", "code": code}
-            
-        except Exception as e:
-            raise Go2CommandError(f"Fout bij stand commando: {e}")
+        return self._execute_command(self.sport_client.StandUp, "StandUp")
     
     def sit(self):
-        """Laat robot zitten"""
-        if not self.connected:
-            raise Go2ConnectionError("Niet verbonden met robot")
-        
-        try:
-            # Gebruik officiële SDK StandDown methode
-            code = self.sport_client.StandDown()
-            if code != 0:
-                raise Go2CommandError(f"Sit commando mislukt met code: {code}")
-            
-            return {"status": "ok", "message": "Sit command sent", "code": code}
-            
-        except Exception as e:
-            raise Go2CommandError(f"Fout bij sit commando: {e}")
+        """Laat robot zitten (StandDown)"""
+        return self._execute_command(self.sport_client.StandDown, "StandDown")
+    
+    def stand_down(self):
+        """Laat robot naar beneden gaan (liggen)"""
+        return self._execute_command(self.sport_client.StandDown, "StandDown")
     
     def move(self, vx: float = 0.0, vy: float = 0.0, vyaw: float = 0.0):
         """
@@ -191,34 +210,229 @@ class Go2Robot:
             vy: Snelheid links/rechts (m/s)
             vyaw: Draaisnelheid (rad/s)
         """
-        if not self.connected:
-            raise Go2ConnectionError("Niet verbonden met robot")
-        
-        try:
-            # Gebruik officiële SDK Move methode
-            code = self.sport_client.Move(vx, vy, vyaw)
-            if code != 0:
-                raise Go2CommandError(f"Move commando mislukt met code: {code}")
-            
-            return {"status": "ok", "message": "Move command sent", "code": code}
-            
-        except Exception as e:
-            raise Go2CommandError(f"Fout bij move commando: {e}")
+        return self._execute_command(self.sport_client.Move, "Move", vx, vy, vyaw)
     
     def stop(self):
         """Stop alle beweging"""
-        if not self.connected:
-            raise Go2ConnectionError("Niet verbonden met robot")
+        return self._execute_command(self.sport_client.StopMove, "StopMove")
+    
+    def damp(self):
+        """Zet robot in damp mode (motoren uit, robot zakt in)"""
+        return self._execute_command(self.sport_client.Damp, "Damp")
+    
+    def balance_stand(self):
+        """Gebalanceerd staan (actieve balans)"""
+        return self._execute_command(self.sport_client.BalanceStand, "BalanceStand")
+    
+    def recovery_stand(self):
+        """Herstel naar staande positie (na val)"""
+        return self._execute_command(self.sport_client.RecoveryStand, "RecoveryStand")
+
+    # ==================== POSES & TRICKS ====================
+    
+    def sit_down(self):
+        """Ga zitten (echte zit positie)"""
+        return self._execute_command(self.sport_client.Sit, "Sit")
+    
+    def rise_sit(self):
+        """Sta op vanuit zit positie"""
+        return self._execute_command(self.sport_client.RiseSit, "RiseSit")
+    
+    def hello(self):
+        """Zwaai/groet beweging"""
+        return self._execute_command(self.sport_client.Hello, "Hello")
+    
+    def stretch(self):
+        """Rek beweging"""
+        return self._execute_command(self.sport_client.Stretch, "Stretch")
+    
+    def heart(self):
+        """Hart gebaar maken"""
+        return self._execute_command(self.sport_client.Heart, "Heart")
+    
+    def scrape(self):
+        """Krab beweging"""
+        return self._execute_command(self.sport_client.Scrape, "Scrape")
+    
+    def content(self):
+        """Tevreden/blij beweging"""
+        return self._execute_command(self.sport_client.Content, "Content")
+    
+    def pose(self, enabled: bool = True):
+        """
+        Pose modus aan/uit
         
-        try:
-            # Gebruik officiële SDK StopMove methode
-            code = self.sport_client.StopMove()
-            if code != 0:
-                raise Go2CommandError(f"Stop commando mislukt met code: {code}")
-            
-            return {"status": "ok", "message": "Stop command sent", "code": code}
-        except Exception as e:
-            raise Go2CommandError(f"Fout bij stop commando: {e}")
+        Args:
+            enabled: True om pose modus aan te zetten
+        """
+        return self._execute_command(self.sport_client.Pose, "Pose", enabled)
+
+    # ==================== DANSEN ====================
+    
+    def dance1(self):
+        """Dans routine 1"""
+        return self._execute_command(self.sport_client.Dance1, "Dance1")
+    
+    def dance2(self):
+        """Dans routine 2"""
+        return self._execute_command(self.sport_client.Dance2, "Dance2")
+
+    # ==================== ACROBATIEK ====================
+    
+    def front_flip(self):
+        """Salto voorwaarts (⚠️ GEVAARLIJK - zorg voor ruimte!)"""
+        return self._execute_command(self.sport_client.FrontFlip, "FrontFlip")
+    
+    def back_flip(self):
+        """Salto achterwaarts (⚠️ GEVAARLIJK - zorg voor ruimte!)"""
+        return self._execute_command(self.sport_client.BackFlip, "BackFlip")
+    
+    def left_flip(self):
+        """Salto naar links (⚠️ GEVAARLIJK - zorg voor ruimte!)"""
+        return self._execute_command(self.sport_client.LeftFlip, "LeftFlip")
+    
+    def front_jump(self):
+        """Spring voorwaarts"""
+        return self._execute_command(self.sport_client.FrontJump, "FrontJump")
+    
+    def front_pounce(self):
+        """Spring/duik voorwaarts"""
+        return self._execute_command(self.sport_client.FrontPounce, "FrontPounce")
+    
+    def hand_stand(self, enabled: bool = True):
+        """
+        Handstand positie
+        
+        Args:
+            enabled: True om handstand te starten, False om te stoppen
+        """
+        return self._execute_command(self.sport_client.HandStand, "HandStand", enabled)
+
+    # ==================== LOOPSTIJLEN ====================
+    
+    def free_walk(self):
+        """Vrije loop modus"""
+        return self._execute_command(self.sport_client.FreeWalk, "FreeWalk")
+    
+    def static_walk(self):
+        """Statische loop (langzaam, stabiel)"""
+        return self._execute_command(self.sport_client.StaticWalk, "StaticWalk")
+    
+    def trot_run(self):
+        """Draf/ren modus"""
+        return self._execute_command(self.sport_client.TrotRun, "TrotRun")
+    
+    def classic_walk(self, enabled: bool = True):
+        """
+        Klassieke loop stijl
+        
+        Args:
+            enabled: True om aan te zetten, False om uit te zetten
+        """
+        return self._execute_command(self.sport_client.ClassicWalk, "ClassicWalk", enabled)
+    
+    def walk_upright(self, enabled: bool = True):
+        """
+        Rechtop lopen (op twee poten)
+        
+        Args:
+            enabled: True om aan te zetten, False om uit te zetten
+        """
+        return self._execute_command(self.sport_client.WalkUpright, "WalkUpright", enabled)
+    
+    def cross_step(self, enabled: bool = True):
+        """
+        Kruis-stap beweging
+        
+        Args:
+            enabled: True om aan te zetten, False om uit te zetten
+        """
+        return self._execute_command(self.sport_client.CrossStep, "CrossStep", enabled)
+
+    # ==================== SPECIALE MODI ====================
+    
+    def free_bound(self, enabled: bool = True):
+        """
+        Vrij springen/bonden modus
+        
+        Args:
+            enabled: True om aan te zetten, False om uit te zetten
+        """
+        return self._execute_command(self.sport_client.FreeBound, "FreeBound", enabled)
+    
+    def free_jump(self, enabled: bool = True):
+        """
+        Vrij springen modus
+        
+        Args:
+            enabled: True om aan te zetten, False om uit te zetten
+        """
+        return self._execute_command(self.sport_client.FreeJump, "FreeJump", enabled)
+    
+    def free_avoid(self, enabled: bool = True):
+        """
+        Vrij ontwijken modus (obstakel vermijding)
+        
+        Args:
+            enabled: True om aan te zetten, False om uit te zetten
+        """
+        return self._execute_command(self.sport_client.FreeAvoid, "FreeAvoid", enabled)
+
+    # ==================== INSTELLINGEN ====================
+    
+    def set_speed_level(self, level: int):
+        """
+        Stel snelheidsniveau in
+        
+        Args:
+            level: Snelheidsniveau (0-2, waarbij 0=langzaam, 2=snel)
+        """
+        return self._execute_command(self.sport_client.SpeedLevel, "SpeedLevel", level)
+    
+    def set_euler(self, roll: float, pitch: float, yaw: float):
+        """
+        Stel lichaam oriëntatie in (Euler hoeken)
+        
+        Args:
+            roll: Rol hoek (rad)
+            pitch: Pitch hoek (rad)
+            yaw: Yaw hoek (rad)
+        """
+        return self._execute_command(self.sport_client.Euler, "Euler", roll, pitch, yaw)
+    
+    def switch_joystick(self, enabled: bool):
+        """
+        Schakel joystick controle in/uit
+        
+        Args:
+            enabled: True om joystick aan te zetten
+        """
+        return self._execute_command(self.sport_client.SwitchJoystick, "SwitchJoystick", enabled)
+    
+    def set_auto_recovery(self, enabled: bool):
+        """
+        Stel automatisch herstel in/uit
+        
+        Args:
+            enabled: True om automatisch herstel aan te zetten
+        """
+        return self._execute_command(self.sport_client.AutoRecoverySet, "AutoRecoverySet", enabled)
+    
+    def get_auto_recovery(self) -> bool:
+        """
+        Haal automatisch herstel status op
+        
+        Returns:
+            True als automatisch herstel aan staat
+        """
+        result = self._execute_command(self.sport_client.AutoRecoveryGet, "AutoRecoveryGet")
+        return result.get("data", False)
+    
+    def switch_avoid_mode(self):
+        """Wissel obstakel vermijding modus"""
+        return self._execute_command(self.sport_client.SwitchAvoidMode, "SwitchAvoidMode")
+
+    # ==================== STATUS ====================
     
     def get_state(self) -> Dict[str, Any]:
         """
@@ -230,8 +444,7 @@ class Go2Robot:
         Note: Officiële SDK gebruikt subscription model voor state.
         Deze implementatie is een vereenvoudigde versie.
         """
-        if not self.connected:
-            raise Go2ConnectionError("Niet verbonden met robot")
+        self._check_connection()
         
         try:
             # Officiële SDK gebruikt subscription model voor robot state
@@ -263,4 +476,3 @@ class Go2Robot:
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit"""
         self.disconnect()
-

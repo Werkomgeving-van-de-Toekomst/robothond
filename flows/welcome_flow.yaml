@@ -1,8 +1,8 @@
 # Welcome Flow voor Go2 Robot
-# Loop naar persoon, hurk, en heet welkom
+# Loop naar persoon, groet, en heet welkom
 
 name: "Welkom Flow"
-description: "Loop naar persoon, hurk, en heet welkom"
+description: "Loop naar persoon, groet met zwaai beweging, en heet welkom"
 
 actions:
   - name: "Sta op"
@@ -21,11 +21,9 @@ actions:
     type: stop
     duration: 0.5
     
-  - name: "Hurk"
-    type: crouch
-    params:
-      height: 0.4  # Hoogte factor (0.0 = zitten, 1.0 = staan)
-    duration: 2.0
+  - name: "Groet beweging"
+    type: hello
+    duration: 3.0
     
   - name: "Welkom heten"
     type: voice_speak
@@ -39,4 +37,3 @@ actions:
   - name: "Sta weer op"
     type: stand
     duration: 2.0
-

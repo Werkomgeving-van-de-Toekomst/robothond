@@ -1,0 +1,45 @@
+# Dance Flow voor Go2 Robot
+# Laat de robot dansen met officiële SDK dans routines
+
+name: "Dans Flow"
+description: "Robot voert dans routines uit"
+
+actions:
+  - name: "Sta op"
+    type: stand
+    duration: 2.0
+    
+  - name: "Aankondiging"
+    type: voice_speak
+    params:
+      text: "Tijd om te dansen!"
+    
+  - name: "Wacht op muziek"
+    type: wait
+    duration: 1.0
+    
+  - name: "Dans routine 1"
+    type: dance1
+    duration: 10.0
+    
+  - name: "Pauze"
+    type: wait
+    duration: 2.0
+    
+  - name: "Dans routine 2"
+    type: dance2
+    duration: 10.0
+    
+  - name: "Buiging"
+    type: sit_down
+    duration: 2.0
+    
+  - name: "Bedankt"
+    type: voice_speak
+    params:
+      text: "Dank je wel voor het kijken!"
+    
+  - name: "Sta weer op"
+    type: rise_sit
+    duration: 2.0
+

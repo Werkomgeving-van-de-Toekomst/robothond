@@ -1,5 +1,5 @@
 # Search Flow voor Go2 Robot
-# Zoek iets op internet en toon resultaten op display
+# Zoek iets op internet en toon resultaten
 
 name: "Internet Zoeken Flow"
 description: "Zoek iets op internet en toon resultaten op gekoppelde PC"
@@ -32,4 +32,3 @@ actions:
     type: voice_speak
     params:
       text: "Ik heb de zoekresultaten gevonden en getoond op het scherm."
-

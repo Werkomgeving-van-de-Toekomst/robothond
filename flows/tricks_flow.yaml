@@ -1,0 +1,49 @@
+# Tricks Flow voor Go2 Robot
+# Demonstratie van verschillende poses en tricks
+
+name: "Tricks Demonstratie"
+description: "Toont verschillende poses en tricks van de Go2"
+
+actions:
+  - name: "Sta op"
+    type: stand
+    duration: 2.0
+    
+  - name: "Intro"
+    type: voice_speak
+    params:
+      text: "Kijk wat ik allemaal kan!"
+    
+  - name: "Zwaai beweging"
+    type: hello
+    duration: 3.0
+    
+  - name: "Rek uit"
+    type: stretch
+    duration: 3.0
+    
+  - name: "Hart gebaar"
+    type: heart
+    duration: 3.0
+    
+  - name: "Tevreden beweging"
+    type: content
+    duration: 2.0
+    
+  - name: "Krab beweging"
+    type: scrape
+    duration: 2.0
+    
+  - name: "Gebalanceerd staan"
+    type: balance_stand
+    duration: 2.0
+    
+  - name: "Einde"
+    type: voice_speak
+    params:
+      text: "Dat was het! Tot de volgende keer!"
+    
+  - name: "Ga zitten"
+    type: sit
+    duration: 2.0
+

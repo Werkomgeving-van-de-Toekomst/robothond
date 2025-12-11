@@ -1,10 +1,11 @@
 # Voorbeeld Custom Flow
-# Toont verschillende actie types
+# Toont verschillende actie types van de officiële SDK
 
 name: "Custom Flow Voorbeeld"
-description: "Demonstreert verschillende flow acties"
+description: "Demonstreert verschillende flow acties uit de officiële SDK"
 
 actions:
+  # === BASIS BEWEGING ===
   - name: "Sta op"
     type: stand
     duration: 2.0
@@ -23,19 +24,29 @@ actions:
       vyaw: 0.0
     duration: 3.0
     
-  - name: "Stop en spreek"
+  - name: "Stop"
     type: stop
     duration: 0.5
     
+  # === POSES & TRICKS ===
   - name: "Groet"
+    type: hello
+    duration: 3.0
+    
+  - name: "Spreek"
     type: voice_speak
     params:
       text: "Hallo! Ik ben de Go2 robot."
+    
+  - name: "Rek uit"
+    type: stretch
+    duration: 3.0
     
   - name: "Wacht"
     type: wait
     duration: 1.0
     
+  # === TERUG NAAR START ===
   - name: "Loop terug"
     type: move
     params:
@@ -44,7 +55,12 @@ actions:
       vyaw: 0.0
     duration: 3.0
     
+  - name: "Draai terug"
+    type: rotate
+    params:
+      angle: -90
+      speed: 0.5
+    
   - name: "Ga zitten"
     type: sit
     duration: 2.0
-

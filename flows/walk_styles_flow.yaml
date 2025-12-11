@@ -1,0 +1,92 @@
+# Walk Styles Flow voor Go2 Robot
+# Demonstratie van verschillende loopstijlen
+
+name: "Loopstijlen Demonstratie"
+description: "Toont verschillende loopstijlen van de Go2"
+
+actions:
+  - name: "Sta op"
+    type: stand
+    duration: 2.0
+    
+  - name: "Intro"
+    type: voice_speak
+    params:
+      text: "Ik ga verschillende loopstijlen demonstreren!"
+    
+  # === STATISCHE LOOP ===
+  - name: "Statische loop activeren"
+    type: static_walk
+    duration: 1.0
+    
+  - name: "Uitleg statisch"
+    type: voice_speak
+    params:
+      text: "Dit is de statische loop. Langzaam en stabiel."
+    
+  - name: "Loop statisch"
+    type: move
+    params:
+      vx: 0.2
+      vy: 0.0
+      vyaw: 0.0
+    duration: 3.0
+    
+  - name: "Stop"
+    type: stop
+    duration: 1.0
+    
+  # === DRAF/REN ===
+  - name: "Draf modus activeren"
+    type: trot_run
+    duration: 1.0
+    
+  - name: "Uitleg draf"
+    type: voice_speak
+    params:
+      text: "Nu de draf modus. Sneller en dynamischer."
+    
+  - name: "Loop draf"
+    type: move
+    params:
+      vx: 0.4
+      vy: 0.0
+      vyaw: 0.0
+    duration: 3.0
+    
+  - name: "Stop"
+    type: stop
+    duration: 1.0
+    
+  # === VRIJE LOOP ===
+  - name: "Vrije loop activeren"
+    type: free_walk
+    duration: 1.0
+    
+  - name: "Uitleg vrij"
+    type: voice_speak
+    params:
+      text: "De vrije loop modus. Flexibel en natuurlijk."
+    
+  - name: "Loop vrij"
+    type: move
+    params:
+      vx: 0.3
+      vy: 0.0
+      vyaw: 0.0
+    duration: 3.0
+    
+  - name: "Stop"
+    type: stop
+    duration: 1.0
+    
+  # === EINDE ===
+  - name: "Einde"
+    type: voice_speak
+    params:
+      text: "Dat waren de basis loopstijlen!"
+    
+  - name: "Ga zitten"
+    type: sit
+    duration: 2.0
+

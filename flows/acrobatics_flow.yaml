@@ -1,0 +1,68 @@
+# Acrobatics Flow voor Go2 Robot
+# ⚠️ WAARSCHUWING: Alleen uitvoeren met voldoende ruimte rondom de robot!
+
+name: "Acrobatiek Flow"
+description: "Acrobatische bewegingen - ALLEEN met voldoende ruimte!"
+
+# ⚠️ VEILIGHEID:
+# - Minimaal 3 meter vrije ruimte rondom de robot
+# - Geen obstakels in de buurt
+# - Zachte ondergrond aanbevolen
+# - Houd afstand tijdens uitvoering
+
+actions:
+  - name: "Sta op"
+    type: stand
+    duration: 2.0
+    
+  - name: "Veiligheidswaarschuwing"
+    type: voice_speak
+    params:
+      text: "Let op! Acrobatiek begint. Zorg voor minimaal 3 meter vrije ruimte rondom mij!"
+    
+  - name: "Wacht op bevestiging"
+    type: wait
+    duration: 5.0
+    
+  - name: "Spring vooruit"
+    type: front_jump
+    duration: 2.0
+    
+  - name: "Herstel"
+    type: recovery_stand
+    duration: 2.0
+    
+  - name: "Handstand"
+    type: hand_stand
+    params:
+      enabled: true
+    duration: 4.0
+    
+  - name: "Terug naar normaal"
+    type: stand
+    duration: 2.0
+    
+  - name: "Einde"
+    type: voice_speak
+    params:
+      text: "Acrobatiek voltooid! Bedankt voor het kijken."
+    
+  - name: "Ga zitten"
+    type: sit
+    duration: 2.0
+
+# Geavanceerde acrobatiek (uitgecommentarieerd voor veiligheid):
+# Verwijder de # om te activeren - ALLEEN voor experts!
+#
+#  - name: "Front flip"
+#    type: front_flip
+#    duration: 3.0
+#
+#  - name: "Back flip"  
+#    type: back_flip
+#    duration: 3.0
+#
+#  - name: "Left flip"
+#    type: left_flip
+#    duration: 3.0
+
