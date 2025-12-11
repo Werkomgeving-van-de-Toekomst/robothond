@@ -35,9 +35,14 @@ go2_mount_hole_spacing_y = 180;
 
 // Mount plaat parameters
 plate_thickness = 4;
-plate_width = 160;
+plate_width = 160;  // Wordt uitgebreid als converter mount actief is
 plate_depth = 140;
 plate_corner_radius = 8;
+
+// Bereken totale breedte met converter
+total_width = include_converter_mount ? 
+    plate_width + converter_mount_spacing + converter_width + 4 : 
+    plate_width;
 
 // Jetson standoff parameters
 standoff_height = 15;       // Ruimte voor ventilatie
@@ -53,10 +58,17 @@ cable_slot_width = 25;
 cable_slot_depth = 15;
 
 // Powerbank houder (optioneel)
-include_powerbank_mount = true;
+include_powerbank_mount = false;
 powerbank_width = 80;
 powerbank_depth = 160;
 powerbank_height = 30;
+
+// DC-DC Converter mount (voor Go2 power outlet)
+include_converter_mount = true;
+converter_width = 101;      // Mean Well SD-100A-12
+converter_depth = 51;
+converter_height = 30;
+converter_mount_spacing = 15;  // Afstand tussen Jetson en converter
 
 // Lip/rand voor extra stevigheid
 lip_height = 8;
@@ -178,6 +190,61 @@ module powerbank_mount(width, depth, height) {
     }
 }
 
+// DC-DC Converter mount (voor Go2 power outlet)
+module converter_mount(width, depth, height) {
+    wall = 2;
+    standoff_height = 5;
+    standoff_diameter = 6;
+    hole_diameter = 3.2;
+    
+    // Converter mounting plate (naast Jetson)
+    converter_x = plate_width + converter_mount_spacing;
+    converter_y = (plate_depth - depth) / 2;
+    
+    translate([converter_x, converter_y, 0]) {
+        // Basis plaat
+        difference() {
+            cube([width + wall * 2, depth + wall * 2, plate_thickness]);
+            
+            // Ventilatie gaten
+            vent_spacing = 15;
+            for (x = [wall + 10 : vent_spacing : width + wall - 10]) {
+                for (y = [wall + 10 : vent_spacing : depth + wall - 10]) {
+                    translate([x, y, -1])
+                        cylinder(h = plate_thickness + 2, d = 5, $fn = 16);
+                }
+            }
+        }
+        
+        // Standoffs voor converter mounting (Mean Well heeft 4 mounting holes)
+        // Converter mounting holes: typisch 3.5mm op ~90mm x 45mm patroon
+        hole_spacing_x = width - 20;
+        hole_spacing_y = depth - 20;
+        
+        for (x_offset = [10, hole_spacing_x]) {
+            for (y_offset = [10, hole_spacing_y]) {
+                translate([wall + x_offset, wall + y_offset, plate_thickness]) {
+                    difference() {
+                        cylinder(h = standoff_height, d = standoff_diameter, $fn = 24);
+                        translate([0, 0, -1])
+                            cylinder(h = standoff_height + 2, d = hole_diameter, $fn = 16);
+                    }
+                }
+            }
+        }
+        
+        // Retaining walls (laag, voor stabiliteit)
+        translate([0, 0, plate_thickness])
+            cube([width + wall * 2, wall, 5]);
+        translate([0, depth + wall, plate_thickness])
+            cube([width + wall * 2, wall, 5]);
+    }
+    
+    // Kabel doorvoer voor power kabels
+    translate([plate_width, plate_depth/2 - 10, 0])
+        cube([converter_mount_spacing, 20, plate_thickness + 5]);
+}
+
 // === MAIN ASSEMBLY ===
 
 module jetson_go2_mount() {
@@ -219,6 +286,11 @@ module jetson_go2_mount() {
             // Powerbank mount (optioneel)
             if (include_powerbank_mount) {
                 powerbank_mount(powerbank_width, powerbank_depth, powerbank_height);
+            }
+            
+            // DC-DC Converter mount (voor Go2 power outlet)
+            if (include_converter_mount) {
+                converter_mount(converter_width, converter_depth, converter_height);
             }
         }
         

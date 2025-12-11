@@ -92,11 +92,20 @@ De Jetson AGX Orin ondersteunt USB-C Power Delivery:
 | Omnicharge 20+ | 20,000 mAh | 100W USB-C | ~2-3 uur |
 | BLUETTI AC2A | 204Wh | 300W AC | ~4-6 uur |
 
-### Optie 2: Go2 Interne Voeding
+### Optie 2: Go2 Power Outlet (Aanbevolen voor lange sessies)
 
-⚠️ **Geavanceerd - kan garantie beïnvloeden**
+De Go2 heeft een **payload power outlet** die je kunt gebruiken met een DC-DC converter.
 
-De Go2 heeft interne voedingsrails die je kunt gebruiken met een DC-DC converter.
+**Voordelen:**
+- ✅ Onbeperkte runtime (zolang robot aan)
+- ✅ Minder gewicht dan powerbank (~200g vs ~1kg)
+- ✅ Geen opladen nodig
+
+**Zie:** [GO2_POWER_OUTLET.md](GO2_POWER_OUTLET.md) voor complete instructies over:
+- DC-DC converter selectie
+- Aansluitinstructies
+- Veiligheidsoverwegingen
+- Troubleshooting
 
 ## Netwerk Configuratie
 
@@ -153,6 +162,7 @@ cd ~/go2-ai && python src/main.py
 
 ## Zie Ook
 
+- [GO2_POWER_OUTLET.md](GO2_POWER_OUTLET.md) - **Power outlet setup** (aanbevolen!)
 - [JETSON_AGX_ORIN_VERBINDING.md](JETSON_AGX_ORIN_VERBINDING.md) - Netwerk setup
 - [JETSON_VOICE_PROCESSING.md](JETSON_VOICE_PROCESSING.md) - Voice AI setup
 - [ETHERNET_VERBINDING.md](ETHERNET_VERBINDING.md) - Ethernet configuratie

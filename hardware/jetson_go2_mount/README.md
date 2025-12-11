@@ -28,10 +28,10 @@
 
 | Component | Afmeting |
 |-----------|----------|
-| Totale breedte | 160 mm (+ powerbank: 250 mm) |
+| Totale breedte | 160 mm (+ converter: 280 mm, + powerbank: 250 mm) |
 | Totale diepte | 140 mm |
 | Hoogte (zonder Jetson) | ~23 mm |
-| Gewicht (geschat) | ~150-200 gram |
+| Gewicht (geschat) | ~150-200 gram (+ converter mount: +50g) |
 
 ### Compatibiliteit
 
@@ -109,6 +109,40 @@ openscad -o jetson_go2_mount_no_powerbank.stl \
     jetson_go2_mount.scad
 ```
 
+## Power Opties
+
+### Optie 1: DC-DC Converter (Go2 Power Outlet)
+
+Voor gebruik met de Go2 power outlet (aanbevolen voor lange sessies):
+
+```openscad
+// Activeer converter mount
+include_converter_mount = true;
+include_powerbank_mount = false;
+```
+
+**Voordelen:**
+- ✅ Onbeperkte runtime (zolang robot aan)
+- ✅ Minder gewicht dan powerbank
+- ✅ Geen opladen nodig
+
+**Zie:** [GO2_POWER_OUTLET.md](../../docs/GO2_POWER_OUTLET.md) voor complete instructies.
+
+### Optie 2: Powerbank
+
+Voor mobiele operatie zonder Go2 power outlet:
+
+```openscad
+// Activeer powerbank mount
+include_powerbank_mount = true;
+include_converter_mount = false;
+```
+
+**Voordelen:**
+- ✅ Eenvoudiger setup
+- ✅ Geen hardware modificatie nodig
+- ✅ Werkt ook zonder Go2 aan
+
 ## Aanpassingen
 
 Het OpenSCAD bestand is volledig parametrisch. Je kunt de volgende variabelen aanpassen:
@@ -121,13 +155,20 @@ jetson_depth = 110;
 // Standoff hoogte (meer ruimte voor ventilatie)
 standoff_height = 15;  // Verhoog naar 20 voor betere koeling
 
-// Powerbank houder aan/uit
-include_powerbank_mount = true;  // Zet op false om uit te schakelen
+// Power opties
+include_powerbank_mount = false;  // Powerbank mount
+include_converter_mount = true;    // DC-DC converter mount (Go2 power)
 
 // Powerbank afmetingen (pas aan voor jouw powerbank)
 powerbank_width = 80;
 powerbank_depth = 160;
 powerbank_height = 30;
+
+// Converter afmetingen (Mean Well SD-100A-12 standaard)
+converter_width = 101;
+converter_depth = 51;
+converter_height = 30;
+converter_mount_spacing = 15;  // Afstand tussen Jetson en converter
 ```
 
 ## Montage
@@ -140,6 +181,10 @@ powerbank_height = 30;
 | M3 moeren | 4 | Optioneel (standoffs hebben gaten) |
 | M4 of M5 schroeven | 4 | Voor Go2 bevestiging (check Go2 specs) |
 | Korte Ethernet kabel | 1 | 30-50cm |
+| **Converter mount (optioneel):** |
+| M3 x 10mm schroeven | 4 | Voor converter bevestiging |
+| DC-DC converter | 1 | Mean Well SD-100A-12 of vergelijkbaar |
+| Power kabels | 2 | Go2 → Converter, Converter → Jetson |
 | Velcro straps | 2 | Voor powerbank (optioneel) |
 
 ### Montage Stappen
@@ -150,7 +195,14 @@ powerbank_height = 30;
 4. **Bevestig Jetson** met M3 schroeven
 5. **Plaats op Go2** en bevestig met M4/M5 schroeven in de tabs
 6. **Route kabels** door de kabel slots
-7. **Bevestig powerbank** met velcro straps (indien van toepassing)
+
+**Voor converter mount:**
+7. **Bevestig converter** op de converter mount met M3 schroeven
+8. **Sluit power aan** volgens [GO2_POWER_OUTLET.md](../../docs/GO2_POWER_OUTLET.md)
+9. **Test power** voordat je alles aansluit
+
+**Voor powerbank:**
+7. **Bevestig powerbank** met velcro straps in de powerbank houder
 
 ### Kabel Routing
 
