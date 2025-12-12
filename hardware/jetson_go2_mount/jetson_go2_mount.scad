@@ -256,14 +256,14 @@ module converter_mount(width, depth, height) {
     rotated_width = depth;   // Na rotatie wordt dit de nieuwe breedte (X-richting)
     rotated_depth = width;   // Na rotatie wordt dit de nieuwe diepte (Y-richting)
     
-    // Converter mounting plate (naast Jetson, in verlengde van basisplaat)
+    // Converter mounting plate (achter Jetson, in verlengde van basisplaat in Y-richting)
     // Na 90 graden rotatie: converter plaat heeft rotated_width als breedte
     converter_plate_width = rotated_width + wall * 2;
     converter_plate_depth = rotated_depth + wall * 2;
     
-    // Positie: converter_x blijft hetzelfde, converter_y moet gecentreerd worden op basisplaat
-    converter_x = plate_width + converter_mount_spacing;
-    converter_y = (plate_depth - converter_plate_depth) / 2;
+    // Positie: converter_x moet gecentreerd worden op basisplaat, converter_y komt achter basisplaat
+    converter_x = (plate_width - converter_plate_width) / 2;
+    converter_y = plate_depth + converter_mount_spacing;
     
     translate([converter_x, converter_y, 0]) {
         // Rotatie: 90 graden om Z-as (kwart slag), roteer om het midden van de plaat
@@ -311,9 +311,9 @@ module converter_mount(width, depth, height) {
         }
     }
     
-    // Kabel doorvoer voor power kabels
-    translate([plate_width, plate_depth/2 - 10, 0])
-        cube([converter_mount_spacing, 20, plate_thickness + 5]);
+    // Kabel doorvoer voor power kabels (tussen basisplaat en converter mount)
+    translate([plate_width/2 - 10, plate_depth, 0])
+        cube([20, converter_mount_spacing, plate_thickness + 5]);
 }
 
 // === MAIN ASSEMBLY ===
