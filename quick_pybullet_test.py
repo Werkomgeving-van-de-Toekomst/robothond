@@ -13,11 +13,29 @@ from src.simulation import Go2Simulator
 import time
 import numpy as np
 
+# Detecteer of GUI beschikbaar is
+def has_display():
+    """Check of er een X11 display beschikbaar is"""
+    return os.environ.get('DISPLAY') is not None
+
+# Bepaal GUI mode: gebruik command-line argument of auto-detect
+gui_mode = True
+if len(sys.argv) > 1:
+    if sys.argv[1] in ['--no-gui', '--headless', '-n']:
+        gui_mode = False
+    elif sys.argv[1] in ['--gui', '-g']:
+        gui_mode = True
+else:
+    # Auto-detect: alleen GUI als DISPLAY beschikbaar is
+    gui_mode = has_display()
+
 print("="*70)
 print("  Snelle PyBullet Test - 5 seconden")
 print("="*70)
+print(f"  GUI mode: {'AAN' if gui_mode else 'UIT (headless)'}")
+print("="*70)
 
-with Go2Simulator(gui=True) as sim:
+with Go2Simulator(gui=gui_mode) as sim:
     print(f"✓ Robot geladen: {len(sim.joint_indices)} joints")
     
     # Korte beweging test

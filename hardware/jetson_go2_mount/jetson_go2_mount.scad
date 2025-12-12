@@ -42,17 +42,18 @@ go2_mount_hole_spacing_x = 140;
 go2_mount_hole_spacing_y = 180;
 
 // Go2 payload rail gleuf specificaties (T-slot rails)
-go2_groove_width = 6;       // Breedte van de gleuf (mm)
-go2_groove_depth = 3;       // Diepte van de gleuf (mm)
-go2_groove_spacing = 150;   // Afstand tussen gleuven (center to center)
+go2_groove_width = 7.2;     // Breedte van de gleuf (mm)
+go2_groove_depth = 7.0;     // Diepte van de gleuf (mm)
+go2_groove_spacing = 58;    // Afstand tussen gleuven (center to center)
 go2_rail_length = 180;      // Lengte van de rail (moet in gleuf passen)
 go2_rail_thickness = 2.5;   // Dikte van de rail (iets kleiner dan gleuf voor speling)
-go2_rail_height = 6;        // Totale hoogte van de rail (steel + T-top, moet in gleuf passen)
+go2_rail_height = 7.0;      // Totale hoogte van de rail (steel + T-top, moet in gleuf passen)
 
 // Mount plaat parameters
-// Plate breedte moet overeenkomen met Go2 gleuf spacing voor juiste uitlijning
+// Plate breedte moet groot genoeg zijn voor Jetson (110mm) + marge
+// Rails worden geplaatst op gleuf spacing (58mm center-to-center)
 plate_thickness = 4;
-plate_width = go2_groove_spacing;  // Gelijk aan gleuf spacing voor perfecte uitlijning
+plate_width = 120;  // Breed genoeg voor Jetson (110mm) + marge, rails op 58mm spacing
 plate_depth = 140;
 plate_corner_radius = 8;
 
@@ -140,17 +141,17 @@ module standoff(height, outer_d, hole_d) {
 // Go2 T-slot rail (schuift in Go2 payload gleuven)
 // Deze module maakt een duidelijke T-vorm die in de Go2 gleuven schuift
 module go2_t_slot_rail(length, groove_width, groove_depth, rail_thickness, rail_height) {
-    // T-slot afmetingen met speling voor soepel schuiven
-    // De steel moet smaller zijn dan de gleuf opening om erdoor te kunnen
-    // De T-top moet breder zijn dan de steel om achter de gleuf te blijven
+    // T-slot afmetingen gebaseerd op Go2 opzetbasis dimensies
+    // Onderkant (steel): 7mm breed, 3mm hoog
+    // T-top: 4mm breed, rest van de hoogte
     
     // Steel afmetingen (onderste deel dat door de gleuf opening past)
-    steel_width = groove_width - 0.8;        // Steel (0.8mm smaller dan gleuf voor speling)
-    steel_height = groove_depth - 0.2;       // Hoogte steel (iets kleiner dan gleuf diepte)
+    steel_width = 7.0;        // Steel breedte (7mm zoals gespecificeerd)
+    steel_height = 3.0;        // Steel hoogte (3mm zoals gespecificeerd)
     
     // T-top afmetingen (bovenste deel dat achter de gleuf blijft)
-    t_top_width = groove_width + 4.0;        // T-top (4mm breder dan gleuf - duidelijk zichtbaar!)
-    t_top_height = rail_height - steel_height; // Rest van de hoogte voor T-top
+    t_top_width = 4.0;         // T-top breedte (4mm zoals gespecificeerd)
+    t_top_height = rail_height - steel_height; // Rest van de hoogte voor T-top (7mm - 3mm = 4mm)
     
     // Start vanaf de onderkant (negatieve Z voor onder de plate)
     translate([0, 0, -rail_height]) {
@@ -162,7 +163,7 @@ module go2_t_slot_rail(length, groove_width, groove_depth, rail_thickness, rail_
         }
         
         // T-top (bovenste deel, blijft achter gleuf - duidelijk zichtbaar als T-vorm)
-        // T-top is breder dan steel, waardoor duidelijke T-vorm ontstaat
+        // T-top is smaller dan steel (4mm vs 7mm), waardoor T-vorm ontstaat
         t_top_x_offset = (groove_width - t_top_width) / 2;
         translate([t_top_x_offset, 0, steel_height]) {
             cube([t_top_width, length, t_top_height]);
@@ -382,9 +383,14 @@ module jetson_go2_mount() {
                 // Bereken rail positie (gecentreerd op plate)
                 rail_offset_y = (plate_depth - go2_rail_length) / 2;
                 
+                // Bereken rail posities zodat ze op gleuf spacing (58mm) center-to-center staan
+                // Centreer de rails op de plaat
+                rail_center_x = plate_width / 2;
+                left_rail_x = rail_center_x - go2_groove_spacing / 2;
+                right_rail_x = rail_center_x + go2_groove_spacing / 2;
+                
                 // Linker rail (schuift in linker gleuf van Go2)
-                // Rail loopt langs de linker zijkant van basisplaat
-                translate([-go2_groove_width/2, rail_offset_y, 0]) {
+                translate([left_rail_x - go2_groove_width/2, rail_offset_y, 0]) {
                     rotate([0, 0, 0])  // Geen rotatie, rail loopt in Y-richting
                         go2_t_slot_rail(
                             go2_rail_length,
@@ -396,8 +402,7 @@ module jetson_go2_mount() {
                 }
                 
                 // Rechter rail (schuift in rechter gleuf van Go2)
-                // Rail loopt langs de rechter zijkant van basisplaat (originele breedte)
-                translate([plate_width - go2_groove_width/2, rail_offset_y, 0]) {
+                translate([right_rail_x - go2_groove_width/2, rail_offset_y, 0]) {
                     rotate([0, 0, 0])  // Geen rotatie, rail loopt in Y-richting
                         go2_t_slot_rail(
                             go2_rail_length,
