@@ -317,30 +317,37 @@ module converter_mount(width, depth, height) {
     
     // Verbinding tussen basisplaat en converter mount (breder, minder diep, vloeiende afronding)
     // Deze verbinding zorgt voor stevigheid en kabel doorvoer
+    // Verbinding loopt van basisplaat tot direct aansluitend op converter mount plaat
     connection_x = (plate_width - converter_connection_width) / 2;
     connection_y = plate_depth;
+    // Verbinding loopt tot aan converter mount plaat (converter_y positie)
+    // Maak verbinding iets langer zodat deze direct aansluit op converter mount plaat
+    connection_length = converter_mount_spacing + 0.1;  // Tot aan converter mount plaat + kleine overlap
+    
+    // Bepaal taper breedte voor vloeiende overgang naar converter mount plaat
+    taper_width = converter_plate_width * 0.8;  // 80% van converter plaat breedte
+    taper_x = (converter_connection_width - taper_width) / 2;
     
     translate([connection_x, connection_y, 0]) {
         // Vloeiende verbinding met afgeronde bovenkant en taps toelopende onderkant
         hull() {
-            // Bovenkant: volle breedte met afgeronde hoeken
+            // Bovenkant: volle breedte met afgeronde hoeken (aansluitend op basisplaat)
             translate([converter_connection_radius, 0, 0])
                 cylinder(h = plate_thickness, r = converter_connection_radius, $fn = 32);
             translate([converter_connection_width - converter_connection_radius, 0, 0])
                 cylinder(h = plate_thickness, r = converter_connection_radius, $fn = 32);
             
-            // Onderkant: taps toelopend voor vloeiende overgang naar converter mount
-            taper_width = converter_connection_width * 0.6;  // 60% van breedte voor vloeiende overgang
-            taper_x = (converter_connection_width - taper_width) / 2;
-            translate([taper_x + converter_connection_radius, converter_connection_depth, 0])
+            // Onderkant: taps toelopend voor vloeiende overgang naar converter mount plaat
+            // Sluit direct aan op converter mount plaat (op converter_y positie)
+            translate([taper_x + converter_connection_radius, connection_length, 0])
                 cylinder(h = plate_thickness, r = converter_connection_radius, $fn = 32);
-            translate([taper_x + taper_width - converter_connection_radius, converter_connection_depth, 0])
+            translate([taper_x + taper_width - converter_connection_radius, connection_length, 0])
                 cylinder(h = plate_thickness, r = converter_connection_radius, $fn = 32);
         }
         
         // Kabel doorvoer opening (in het midden, met afgeronde hoeken)
         cable_opening_width = 25;
-        cable_opening_depth = converter_connection_depth - 1;
+        cable_opening_depth = connection_length - 1;
         translate([(converter_connection_width - cable_opening_width) / 2, 0.5, -1])
             rounded_rect(cable_opening_width, cable_opening_depth, plate_thickness + 2, 3);
     }
