@@ -251,48 +251,64 @@ module converter_mount(width, depth, height) {
     standoff_diameter = 6;
     hole_diameter = 3.2;
     
+    // Converter wordt 90 graden gedraaid: width en depth wisselen om
+    // Na rotatie: originele depth wordt nieuwe breedte, originele width wordt nieuwe diepte
+    rotated_width = depth;   // Na rotatie wordt dit de nieuwe breedte (X-richting)
+    rotated_depth = width;   // Na rotatie wordt dit de nieuwe diepte (Y-richting)
+    
     // Converter mounting plate (naast Jetson, in verlengde van basisplaat)
+    // Na 90 graden rotatie: converter plaat heeft rotated_width als breedte
+    converter_plate_width = rotated_width + wall * 2;
+    converter_plate_depth = rotated_depth + wall * 2;
+    
+    // Positie: converter_x blijft hetzelfde, converter_y moet gecentreerd worden op basisplaat
     converter_x = plate_width + converter_mount_spacing;
-    converter_y = (plate_depth - depth) / 2;
-    converter_plate_width = width + wall * 2;
+    converter_y = (plate_depth - converter_plate_depth) / 2;
     
     translate([converter_x, converter_y, 0]) {
-        // Basis plaat
-        difference() {
-            cube([converter_plate_width, depth + wall * 2, plate_thickness]);
-            
-            // Ventilatie gaten
-            vent_spacing = 15;
-            for (x = [wall + 10 : vent_spacing : width + wall - 10]) {
-                for (y = [wall + 10 : vent_spacing : depth + wall - 10]) {
-                    translate([x, y, -1])
-                        cylinder(h = plate_thickness + 2, d = 5, $fn = 16);
-                }
-            }
-        }
-        
-        // Standoffs voor converter mounting (Mean Well heeft 4 mounting holes)
-        // Converter mounting holes: typisch 3.5mm op ~90mm x 45mm patroon
-        hole_spacing_x = width - 20;
-        hole_spacing_y = depth - 20;
-        
-        for (x_offset = [10, hole_spacing_x]) {
-            for (y_offset = [10, hole_spacing_y]) {
-                translate([wall + x_offset, wall + y_offset, plate_thickness]) {
+        // Rotatie: 90 graden om Z-as (kwart slag), roteer om het midden van de plaat
+        translate([converter_plate_width/2, converter_plate_depth/2, 0]) {
+            rotate([0, 0, 90]) {
+                translate([-converter_plate_depth/2, -converter_plate_width/2, 0]) {
+                    // Basis plaat (na rotatie: width en depth zijn omgewisseld)
                     difference() {
-                        cylinder(h = standoff_height, d = standoff_diameter, $fn = 24);
-                        translate([0, 0, -1])
-                            cylinder(h = standoff_height + 2, d = hole_diameter, $fn = 16);
+                        cube([converter_plate_depth, converter_plate_width, plate_thickness]);
+                        
+                        // Ventilatie gaten (aanpassen voor geroteerde positie)
+                        vent_spacing = 15;
+                        for (x = [wall + 10 : vent_spacing : rotated_depth + wall - 10]) {
+                            for (y = [wall + 10 : vent_spacing : rotated_width + wall - 10]) {
+                                translate([x, y, -1])
+                                    cylinder(h = plate_thickness + 2, d = 5, $fn = 16);
+                            }
+                        }
                     }
+                    
+                    // Standoffs voor converter mounting (Mean Well heeft 4 mounting holes)
+                    // Na rotatie: hole_spacing_x en hole_spacing_y zijn omgewisseld
+                    hole_spacing_x = rotated_depth - 20;
+                    hole_spacing_y = rotated_width - 20;
+                    
+                    for (x_offset = [10, hole_spacing_x]) {
+                        for (y_offset = [10, hole_spacing_y]) {
+                            translate([wall + x_offset, wall + y_offset, plate_thickness]) {
+                                difference() {
+                                    cylinder(h = standoff_height, d = standoff_diameter, $fn = 24);
+                                    translate([0, 0, -1])
+                                        cylinder(h = standoff_height + 2, d = hole_diameter, $fn = 16);
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Retaining walls (laag, voor stabiliteit) - na rotatie
+                    translate([0, 0, plate_thickness])
+                        cube([converter_plate_depth, wall, 5]);
+                    translate([0, converter_plate_width - wall, plate_thickness])
+                        cube([converter_plate_depth, wall, 5]);
                 }
             }
         }
-        
-        // Retaining walls (laag, voor stabiliteit)
-        translate([0, 0, plate_thickness])
-            cube([converter_plate_width, wall, 5]);
-        translate([0, depth + wall, plate_thickness])
-            cube([converter_plate_width, wall, 5]);
     }
     
     // Kabel doorvoer voor power kabels
