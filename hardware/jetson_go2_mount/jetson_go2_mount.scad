@@ -86,6 +86,9 @@ converter_width = 101;      // Mean Well SD-100A-12
 converter_depth = 51;
 converter_height = 30;
 converter_mount_spacing = 15;  // Afstand tussen Jetson en converter
+converter_connection_width = 80;  // Breedte van verbinding tussen basisplaat en converter mount
+converter_connection_depth = 8;   // Diepte van verbinding (minder diep voor compactheid)
+converter_connection_radius = 4; // Radius voor vloeiende afronding
 
 // Lip/rand voor extra stevigheid
 lip_height = 8;
@@ -312,9 +315,35 @@ module converter_mount(width, depth, height) {
         }
     }
     
-    // Kabel doorvoer voor power kabels (tussen basisplaat en converter mount)
-    translate([plate_width/2 - 10, plate_depth, 0])
-        cube([20, converter_mount_spacing, plate_thickness + 5]);
+    // Verbinding tussen basisplaat en converter mount (breder, minder diep, vloeiende afronding)
+    // Deze verbinding zorgt voor stevigheid en kabel doorvoer
+    connection_x = (plate_width - converter_connection_width) / 2;
+    connection_y = plate_depth;
+    
+    translate([connection_x, connection_y, 0]) {
+        // Vloeiende verbinding met afgeronde bovenkant en taps toelopende onderkant
+        hull() {
+            // Bovenkant: volle breedte met afgeronde hoeken
+            translate([converter_connection_radius, 0, 0])
+                cylinder(h = plate_thickness, r = converter_connection_radius, $fn = 32);
+            translate([converter_connection_width - converter_connection_radius, 0, 0])
+                cylinder(h = plate_thickness, r = converter_connection_radius, $fn = 32);
+            
+            // Onderkant: taps toelopend voor vloeiende overgang naar converter mount
+            taper_width = converter_connection_width * 0.6;  // 60% van breedte voor vloeiende overgang
+            taper_x = (converter_connection_width - taper_width) / 2;
+            translate([taper_x + converter_connection_radius, converter_connection_depth, 0])
+                cylinder(h = plate_thickness, r = converter_connection_radius, $fn = 32);
+            translate([taper_x + taper_width - converter_connection_radius, converter_connection_depth, 0])
+                cylinder(h = plate_thickness, r = converter_connection_radius, $fn = 32);
+        }
+        
+        // Kabel doorvoer opening (in het midden, met afgeronde hoeken)
+        cable_opening_width = 25;
+        cable_opening_depth = converter_connection_depth - 1;
+        translate([(converter_connection_width - cable_opening_width) / 2, 0.5, -1])
+            rounded_rect(cable_opening_width, cable_opening_depth, plate_thickness + 2, 3);
+    }
 }
 
 // === MAIN ASSEMBLY ===
