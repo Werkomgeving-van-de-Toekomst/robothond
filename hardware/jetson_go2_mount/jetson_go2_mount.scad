@@ -251,18 +251,10 @@ module converter_mount(width, depth, height) {
     standoff_diameter = 6;
     hole_diameter = 3.2;
     
-    // Converter mounting plate (naast Jetson)
+    // Converter mounting plate (naast Jetson, in verlengde van basisplaat)
     converter_x = plate_width + converter_mount_spacing;
     converter_y = (plate_depth - depth) / 2;
-    
-    // Bereken totale mount breedte voor rail uitlijning
-    base_converter_width = width + wall * 2;
-    total_mount_width = plate_width + converter_mount_spacing + base_converter_width;
-    
-    // Converter plaat breedte: uitlijnen met rechter rail positie
-    // Rechter rail staat op: total_mount_width - go2_groove_width/2
-    // Converter plaat moet tot aan rail lopen (met kleine marge)
-    converter_plate_width = base_converter_width + go2_groove_width/2;
+    converter_plate_width = width + wall * 2;
     
     translate([converter_x, converter_y, 0]) {
         // Basis plaat
@@ -332,20 +324,13 @@ module jetson_go2_mount() {
                 jetson_lip(jetson_width, jetson_depth, lip_height, lip_thickness);
             
             // Go2 mounting: T-slot rails (schuiven in gleuven)
+            // Rails alleen onder basisplaat (niet onder converter mount)
             if (use_slide_rails) {
                 // Bereken rail positie (gecentreerd op plate)
                 rail_offset_y = (plate_depth - go2_rail_length) / 2;
                 
-                // Bereken totale breedte inclusief converter mount (als actief)
-                // Moet overeenkomen met berekening in converter_mount module
-                base_converter_width = include_converter_mount ? converter_width + 4 : 0; // converter_width + 2*wall
-                converter_plate_width = include_converter_mount ? 
-                    base_converter_width + go2_groove_width/2 : 0;
-                total_mount_width = plate_width + 
-                    (include_converter_mount ? converter_mount_spacing + converter_plate_width : 0);
-                
                 // Linker rail (schuift in linker gleuf van Go2)
-                // Rail loopt langs de linker zijkant, naar beneden
+                // Rail loopt langs de linker zijkant van basisplaat
                 translate([-go2_groove_width/2, rail_offset_y, 0]) {
                     rotate([0, 0, 0])  // Geen rotatie, rail loopt in Y-richting
                         go2_t_slot_rail(
@@ -358,8 +343,8 @@ module jetson_go2_mount() {
                 }
                 
                 // Rechter rail (schuift in rechter gleuf van Go2)
-                // Rail loopt langs de rechter zijkant, door over converter mount (als actief)
-                translate([total_mount_width - go2_groove_width/2, rail_offset_y, 0]) {
+                // Rail loopt langs de rechter zijkant van basisplaat (originele breedte)
+                translate([plate_width - go2_groove_width/2, rail_offset_y, 0]) {
                     rotate([0, 0, 0])  // Geen rotatie, rail loopt in Y-richting
                         go2_t_slot_rail(
                             go2_rail_length,
