@@ -251,33 +251,34 @@ module converter_mount(width, depth, height) {
     standoff_diameter = 6;
     hole_diameter = 3.2;
     
-    // Converter wordt 90 graden gedraaid: width en depth wisselen om
-    // Na rotatie: originele depth wordt nieuwe breedte, originele width wordt nieuwe diepte
-    rotated_width = depth;   // Na rotatie wordt dit de nieuwe breedte (X-richting)
-    rotated_depth = width;   // Na rotatie wordt dit de nieuwe diepte (Y-richting)
+    // Converter wordt 180 graden gedraaid (twee kwartslagen): breedste kant naar voren
+    // Na rotatie: originele width wordt nieuwe breedte (bredere verbinding met basisplaat!)
+    rotated_width = width;   // Na rotatie wordt dit de nieuwe breedte (X-richting) - 101mm breed!
+    rotated_depth = depth;   // Na rotatie wordt dit de nieuwe diepte (Y-richting) - 51mm diep
     
     // Converter mounting plate (achter Jetson, in verlengde van basisplaat in Y-richting)
-    // Na 90 graden rotatie: converter plaat heeft rotated_width als breedte
-    converter_plate_width = rotated_width + wall * 2;
-    converter_plate_depth = rotated_depth + wall * 2;
+    // Na 180 graden rotatie: converter plaat heeft rotated_width als breedte (veel breder!)
+    converter_plate_width = rotated_width + wall * 2;  // ~105mm breed (stevige verbinding)
+    converter_plate_depth = rotated_depth + wall * 2;  // ~55mm diep
     
     // Positie: converter_x moet gecentreerd worden op basisplaat, converter_y komt achter basisplaat
     converter_x = (plate_width - converter_plate_width) / 2;
     converter_y = plate_depth + converter_mount_spacing;
     
     translate([converter_x, converter_y, 0]) {
-        // Rotatie: 90 graden om Z-as (kwart slag), roteer om het midden van de plaat
+        // Rotatie: 180 graden om Z-as (twee kwartslagen), roteer om het midden van de plaat
+        // Dit geeft een bredere verbinding met de basisplaat (101mm breed i.p.v. 51mm)
         translate([converter_plate_width/2, converter_plate_depth/2, 0]) {
-            rotate([0, 0, 90]) {
-                translate([-converter_plate_depth/2, -converter_plate_width/2, 0]) {
-                    // Basis plaat (na rotatie: width en depth zijn omgewisseld)
+            rotate([0, 0, 180]) {
+                translate([-converter_plate_width/2, -converter_plate_depth/2, 0]) {
+                    // Basis plaat (na 180 graden rotatie: breedste kant naar voren)
                     difference() {
-                        cube([converter_plate_depth, converter_plate_width, plate_thickness]);
+                        cube([converter_plate_width, converter_plate_depth, plate_thickness]);
                         
-                        // Ventilatie gaten (aanpassen voor geroteerde positie)
+                        // Ventilatie gaten (aanpassen voor 180 graden rotatie)
                         vent_spacing = 15;
-                        for (x = [wall + 10 : vent_spacing : rotated_depth + wall - 10]) {
-                            for (y = [wall + 10 : vent_spacing : rotated_width + wall - 10]) {
+                        for (x = [wall + 10 : vent_spacing : rotated_width + wall - 10]) {
+                            for (y = [wall + 10 : vent_spacing : rotated_depth + wall - 10]) {
                                 translate([x, y, -1])
                                     cylinder(h = plate_thickness + 2, d = 5, $fn = 16);
                             }
@@ -285,9 +286,9 @@ module converter_mount(width, depth, height) {
                     }
                     
                     // Standoffs voor converter mounting (Mean Well heeft 4 mounting holes)
-                    // Na rotatie: hole_spacing_x en hole_spacing_y zijn omgewisseld
-                    hole_spacing_x = rotated_depth - 20;
-                    hole_spacing_y = rotated_width - 20;
+                    // Na 180 graden rotatie: terug naar originele orientatie
+                    hole_spacing_x = rotated_width - 20;
+                    hole_spacing_y = rotated_depth - 20;
                     
                     for (x_offset = [10, hole_spacing_x]) {
                         for (y_offset = [10, hole_spacing_y]) {
@@ -301,11 +302,11 @@ module converter_mount(width, depth, height) {
                         }
                     }
                     
-                    // Retaining walls (laag, voor stabiliteit) - na rotatie
+                    // Retaining walls (laag, voor stabiliteit) - na 180 graden rotatie
                     translate([0, 0, plate_thickness])
-                        cube([converter_plate_depth, wall, 5]);
-                    translate([0, converter_plate_width - wall, plate_thickness])
-                        cube([converter_plate_depth, wall, 5]);
+                        cube([converter_plate_width, wall, 5]);
+                    translate([0, converter_plate_depth - wall, plate_thickness])
+                        cube([converter_plate_width, wall, 5]);
                 }
             }
         }
