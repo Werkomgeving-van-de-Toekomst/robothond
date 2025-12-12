@@ -47,7 +47,7 @@ go2_groove_depth = 3;       // Diepte van de gleuf (mm)
 go2_groove_spacing = 150;   // Afstand tussen gleuven (center to center)
 go2_rail_length = 180;      // Lengte van de rail (moet in gleuf passen)
 go2_rail_thickness = 2.5;   // Dikte van de rail (iets kleiner dan gleuf voor speling)
-go2_rail_height = 4;        // Hoogte van de rail (moet in gleuf passen)
+go2_rail_height = 6;        // Totale hoogte van de rail (steel + T-top, moet in gleuf passen)
 
 // Mount plaat parameters
 // Plate breedte moet overeenkomen met Go2 gleuf spacing voor juiste uitlijning
@@ -135,22 +135,34 @@ module standoff(height, outer_d, hole_d) {
 }
 
 // Go2 T-slot rail (schuift in Go2 payload gleuven)
+// Deze module maakt een duidelijke T-vorm die in de Go2 gleuven schuift
 module go2_t_slot_rail(length, groove_width, groove_depth, rail_thickness, rail_height) {
     // T-slot afmetingen met speling voor soepel schuiven
-    slot_top_width = groove_width - 0.3;      // Bovenkant (smaller, past door opening)
-    slot_bottom_width = groove_width - 0.2;   // Onderkant (iets smaller dan gleuf)
-    slot_top_thickness = 1.5;                 // Dikte van T-top
-    slot_bottom_thickness = rail_thickness;   // Dikte van onderste deel
+    // De steel moet smaller zijn dan de gleuf opening om erdoor te kunnen
+    // De T-top moet breder zijn dan de steel om achter de gleuf te blijven
     
+    // Steel afmetingen (onderste deel dat door de gleuf opening past)
+    steel_width = groove_width - 0.8;        // Steel (0.8mm smaller dan gleuf voor speling)
+    steel_height = groove_depth - 0.2;       // Hoogte steel (iets kleiner dan gleuf diepte)
+    
+    // T-top afmetingen (bovenste deel dat achter de gleuf blijft)
+    t_top_width = groove_width + 4.0;        // T-top (4mm breder dan gleuf - duidelijk zichtbaar!)
+    t_top_height = rail_height - steel_height; // Rest van de hoogte voor T-top
+    
+    // Start vanaf de onderkant (negatieve Z voor onder de plate)
     translate([0, 0, -rail_height]) {
-        // Onderste deel (steel, past door gleuf opening)
-        translate([(groove_width - slot_bottom_width)/2, 0, 0]) {
-            cube([slot_bottom_width, length, slot_bottom_thickness]);
+        // Steel (onderste deel, past door gleuf opening)
+        // Centreer steel binnen de groef breedte
+        steel_x_offset = (groove_width - steel_width) / 2;
+        translate([steel_x_offset, 0, 0]) {
+            cube([steel_width, length, steel_height]);
         }
         
-        // Bovenste deel (T-vorm, blijft achter gleuf)
-        translate([(groove_width - slot_top_width)/2, 0, slot_bottom_thickness]) {
-            cube([slot_top_width, length, slot_top_thickness]);
+        // T-top (bovenste deel, blijft achter gleuf - duidelijk zichtbaar als T-vorm)
+        // T-top is breder dan steel, waardoor duidelijke T-vorm ontstaat
+        t_top_x_offset = (groove_width - t_top_width) / 2;
+        translate([t_top_x_offset, 0, steel_height]) {
+            cube([t_top_width, length, t_top_height]);
         }
     }
 }
